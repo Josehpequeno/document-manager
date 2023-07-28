@@ -1,6 +1,8 @@
 package api
 
 import (
+	"document-manager/api/handlers"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,11 +10,9 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.GET("/", helloHandler)
+	r.GET("/", handlers.HelloHandler)
+
+	r.GET("/users", handlers.GetAllUsersHandler)
 
 	return r
-}
-
-func helloHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Bem-vindo à API com Gin!"})
 }

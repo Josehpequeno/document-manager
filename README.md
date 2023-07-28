@@ -1,5 +1,5 @@
-# resume-manager
-go api test for resume manager
+# document-manager
+go api para gerenciar documentos
 
 ### Iniciando Banco de dados postgres
 Entrando na pasta de banco de dados
@@ -18,3 +18,11 @@ Se os containers estiverem parados rode o comando abaixo:
 ```
 
 Postgres vai está rodando na porta 5432 e o pgadmin na 8080 de acordo com as credenciais no arquivo de docker-compose.yml
+
+
+# Iniciar variáveis de ambiente  
+```shell
+chmod +x initENV.sh && 
+source initENV.sh && 
+./initENV.sh
+```
