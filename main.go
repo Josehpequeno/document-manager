@@ -26,5 +26,5 @@ func main() {
 
 	router := api.SetupRouter()
 
-	router.Run(":3450")
+	router.Run("localhost:3450")
 }

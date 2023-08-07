@@ -23,6 +23,5 @@ Postgres vai está rodando na porta 5432 e o pgadmin na 8080 de acordo com as cr
 # Iniciar variáveis de ambiente  
 ```shell
 chmod +x initENV.sh && 
-source initENV.sh && 
-./initENV.sh
+source initENV.sh 
 ```
