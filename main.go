@@ -4,9 +4,24 @@ import (
 	"document-manager/api"
 	"document-manager/api/models"
 	"document-manager/database"
+	_ "document-manager/docs"
 	"log"
 )
 
+// @title Document manager API
+// @version 1.0
+// @description This is a sample api of documents manager
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:3450
+// @BasePath /
+// @query.collection.format multi
 func main() {
 
 	//Inicializar a conexão com o banco de dados

@@ -25,3 +25,8 @@ Postgres vai está rodando na porta 5432 e o pgadmin na 8080 de acordo com as cr
 chmod +x initENV.sh && 
 source initENV.sh 
 ```
+
+# Gerar doc swagger
+```shell
+swag init --parseDependency --parseInternal
+```
