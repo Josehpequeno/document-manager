@@ -25,7 +25,6 @@ import (
 func main() {
 
 	//Inicializar a conexão com o banco de dados
-	// _ is db
 	db, err := database.InitDB()
 	if err != nil {
 		log.Fatal("Erro ao configurar a conexão com o banco de dados", err)
