@@ -13,12 +13,12 @@ type ErrorResponse struct {
 }
 
 type MessageResponse struct {
-	MessageMessage string `json:"message"`
+	Message string `json:"message"`
 }
 
 type MessageWithUserResponse struct {
-	MessageMessage string       `json:"message"`
-	User           UserResponse `json:"user"`
+	Message string       `json:"message"`
+	User    UserResponse `json:"user"`
 }
 
 type UsersResponse struct {

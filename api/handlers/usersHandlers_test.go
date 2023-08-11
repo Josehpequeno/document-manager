@@ -67,7 +67,7 @@ func TestGetUserByIDHandler(t *testing.T) {
 		Master: &master,
 	}
 
-	db.FirstOrCreate(&testUser)
+	db.Create(&testUser)
 
 	var existingUser models.User
 	err := db.First(&existingUser, "email = ?", testUser.Email).Error
@@ -76,7 +76,7 @@ func TestGetUserByIDHandler(t *testing.T) {
 	r := gin.Default()
 	r.GET("/users/:id", GetUserByIDHandler)
 
-	req, _ := http.NewRequest("GET", "/users/"+existingUser.ID.String(), nil)
+	req, _ := http.NewRequest("GET", "/users/"+testUserID.String(), nil)
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -86,10 +86,12 @@ func TestGetUserByIDHandler(t *testing.T) {
 	var userResponse UserResponse
 	err = json.Unmarshal(resp.Body.Bytes(), &userResponse)
 	assert.Nil(t, err)
-	assert.Equal(t, existingUser.ID, userResponse.ID)
+	assert.Equal(t, testUserID, userResponse.ID)
 	assert.Equal(t, existingUser.Name, userResponse.Name)
 	assert.Equal(t, existingUser.Email, userResponse.Email)
 	assert.Equal(t, master, userResponse.Master)
+	err = db.Unscoped().Delete(&existingUser).Error
+	assert.Nil(t, err)
 }
 
 func TestCreateUserHandler(t *testing.T) {
@@ -129,5 +131,88 @@ func TestCreateUserHandler(t *testing.T) {
 	// Excluir o usuário após o teste
 	err = db.Delete(&existingUser).Error
 	assert.Nil(t, err)
+}
 
+func TestUpdateUserHandler(t *testing.T) {
+	db := runInitDb()
+	testUserID := uuid.New()
+	var master = false
+	testUser := models.User{
+		ID:     testUserID,
+		Name:   "Test User",
+		Email:  "test@example.com",
+		Master: &master,
+	}
+
+	db.Create(&testUser)
+
+	var existingUser models.User
+	err := db.First(&existingUser, "email = ?", testUser.Email).Error
+	assert.Nil(t, err)
+
+	r := gin.Default()
+	r.PUT("/users/:id", UpdateUserHandler)
+
+	updateUserData := UserBody{
+		Name:   "Update User",
+		Email:  "test@example.com",
+		Master: false,
+	}
+	reqBody, err := json.Marshal(updateUserData)
+	assert.Nil(t, err)
+
+	req, _ := http.NewRequest("PUT", "/users/"+testUserID.String(), bytes.NewBuffer(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var response MessageWithUserResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+	assert.Equal(t, "User updated successfully", response.Message)
+	assert.Equal(t, testUserID, response.User.ID)
+	assert.Equal(t, updateUserData.Name, response.User.Name)
+	assert.Equal(t, updateUserData.Email, response.User.Email)
+	assert.Equal(t, updateUserData.Master, response.User.Master)
+	err = db.Unscoped().Delete(&existingUser).Error
+	assert.Nil(t, err)
+}
+
+func TestDeleteUserHandler(t *testing.T) {
+	db := runInitDb()
+
+	testUserID := uuid.New()
+	master := false
+	testUser := models.User{
+		ID:     testUserID,
+		Name:   "Test User",
+		Email:  "test@example.com",
+		Master: &master,
+	}
+
+	db.Create(&testUser)
+
+	var existingUser models.User
+	err := db.First(&existingUser, "email = ?", testUser.Email).Error
+	assert.Nil(t, err)
+
+	r := gin.Default()
+	r.DELETE("/users/:id", DeleteUserHandler)
+
+	req, _ := http.NewRequest("DELETE", "/users/"+testUserID.String(), nil)
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var response MessageResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+	assert.Equal(t, "User deleted successfully", response.Message)
+	err = db.Unscoped().Delete(&existingUser).Error
+	assert.Nil(t, err)
 }
