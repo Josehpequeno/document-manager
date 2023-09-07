@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ErrorResponse struct {
@@ -56,7 +57,9 @@ type UserBodyUpdate struct {
 //
 //	@Success 200 {object} UsersResponse
 //
+// @Failure 401 {object} MessageResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /users [get]
 func GetAllUsersHandler(c *gin.Context) {
 	db := database.GetDB()
@@ -81,8 +84,10 @@ func GetAllUsersHandler(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Success 200 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} MessageResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /users/{id} [get]
 func GetUserByIDHandler(c *gin.Context) {
 	userIDStr := c.Param("id")
@@ -127,6 +132,14 @@ func CreateUserHandler(c *gin.Context) {
 	//gerar um novo uuid
 	newUser.ID = uuid.New()
 
+	//transformar senha do usuário em hash
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		return
+	}
+	newUser.Password = string(hashedPassword)
+
 	db := database.GetDB()
 
 	if err := db.Create(&newUser).Error; err != nil {
@@ -148,8 +161,10 @@ func CreateUserHandler(c *gin.Context) {
 // @Param user body UserBodyUpdate true "User object"
 // @Success 200 {object} MessageWithUserResponse
 // @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} MessageResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /users/{id} [put]
 func UpdateUserHandler(c *gin.Context) {
 	userID := c.Param("id")
@@ -205,8 +220,10 @@ func UpdateUserHandler(c *gin.Context) {
 // @Produce json
 // @Param id path string true "User ID"
 // @Success 200 {object} MessageResponse
+// @Failure 401 {object} MessageResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /users/{id} [delete]
 func DeleteUserHandler(c *gin.Context) {
 	userID := c.Param("id")

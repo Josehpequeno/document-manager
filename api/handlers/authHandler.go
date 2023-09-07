@@ -4,25 +4,33 @@ import (
 	"document-manager/api/models"
 	"document-manager/database"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtKey = []byte("secretTest")
+var jwtKey = []byte(os.Getenv("API_SECRET"))
 
 type Claims struct {
-	UserID uuid.UUID `json:"user_id"`
+	UserID   uuid.UUID `json:"user_id"`
+	IsMaster *bool     `json:"is_master,omitempty"` //O uso de omitempty na tag JSON garante que o campo não será incluído no token se for nil.
 	jwt.StandardClaims
 }
 
-func generateTokens(userID uuid.UUID) (string, string, error) {
+func VerifyPassword(password, hashedPassword string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+func generateTokens(userID uuid.UUID, isMaster *bool) (string, string, error) {
 	//gerar token de acesso
-	accessTokenExp := time.Now().Add(time.Minute * 15)
+	accessTokenExp := time.Now().Add(time.Hour * 24)
 	accessTokenClaims := &Claims{
-		UserID: userID,
+		UserID:   userID,
+		IsMaster: isMaster,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: accessTokenExp.Unix(),
 		},
@@ -36,7 +44,8 @@ func generateTokens(userID uuid.UUID) (string, string, error) {
 	//  gerar token de atualização
 	refreshTokenExp := time.Now().Add(time.Hour * 24 * 7)
 	refreshTokenClaims := &Claims{
-		UserID: userID,
+		UserID:   userID,
+		IsMaster: isMaster,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: refreshTokenExp.Unix(),
 		},
@@ -52,8 +61,8 @@ func generateTokens(userID uuid.UUID) (string, string, error) {
 
 func LoginHandler(c *gin.Context) {
 	var loginData struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		UsernameOrEmail string `json:"username_or_email"`
+		Password        string `json:"password"`
 	}
 
 	if err := c.BindJSON(&loginData); err != nil {
@@ -64,17 +73,22 @@ func LoginHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	var user models.User
-	if err := db.Where("email = ?", loginData.Email).First(&user).Error; err != nil {
+	if err := db.Where("email = ?", loginData.UsernameOrEmail).First(&user).Error; err != nil {
+		//se não for email verificar se foi passado o nome
+		if err := db.Where("name = ?", loginData.UsernameOrEmail).First(&user).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+	}
+
+	err := VerifyPassword(loginData.Password, user.Password)
+
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	if user.Password != loginData.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
-
-	accessToken, refreshToken, err := generateTokens(user.ID)
+	accessToken, refreshToken, err := generateTokens(user.ID, user.Master)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating tokens"})
 		return
@@ -84,4 +98,72 @@ func LoginHandler(c *gin.Context) {
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
+}
+
+func AuthMiddleware(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Missing token"})
+		c.Abort()
+		return
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtKey), nil
+	})
+
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.Abort()
+		return
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.Abort()
+		return
+	}
+
+	c.Set("claims", claims)
+
+	c.Next()
+}
+
+func AuthMiddlewareMaster(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Missing token"})
+		c.Abort()
+		return
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtKey), nil
+	})
+
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.Abort()
+		return
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.Abort()
+		return
+	}
+
+	if claims.IsMaster != nil && *claims.IsMaster {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		c.Abort()
+		return
+	}
+
+	c.Set("claims", claims)
+
+	c.Next()
 }

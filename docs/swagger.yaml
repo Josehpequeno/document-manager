@@ -101,10 +101,16 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handlers.UsersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Get all users
       tags:
       - Users
@@ -157,6 +163,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handlers.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
         "404":
           description: Not Found
           schema:
@@ -165,6 +175,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Delete a user by ID
       tags:
       - Users
@@ -190,6 +202,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
         "404":
           description: Not Found
           schema:
@@ -198,6 +214,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Get a user by ID
       tags:
       - Users
@@ -229,6 +247,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
         "404":
           description: Not Found
           schema:
@@ -237,7 +259,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Update a user by ID
       tags:
       - Users
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

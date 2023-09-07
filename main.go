@@ -22,6 +22,10 @@ import (
 // @host localhost:3450
 // @BasePath /
 // @query.collection.format multi
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 
 	//Inicializar a conexão com o banco de dados

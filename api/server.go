@@ -14,11 +14,11 @@ func SetupRouter() *gin.Engine {
 
 	r.GET("/", handlers.HelloHandler)
 
-	r.GET("/users", handlers.GetAllUsersHandler)
-	r.GET("/users/:id", handlers.GetUserByIDHandler)
+	r.GET("/users", handlers.AuthMiddleware, handlers.GetAllUsersHandler)
+	r.GET("/users/:id", handlers.AuthMiddleware, handlers.GetUserByIDHandler)
 	r.POST("/users", handlers.CreateUserHandler)
-	r.PUT("/users/:id", handlers.UpdateUserHandler)
-	r.DELETE("/users/:id", handlers.DeleteUserHandler)
+	r.PUT("/users/:id", handlers.AuthMiddleware, handlers.UpdateUserHandler)
+	r.DELETE("/users/:id", handlers.AuthMiddleware, handlers.DeleteUserHandler)
 
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
