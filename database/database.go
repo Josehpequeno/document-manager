@@ -1,8 +1,11 @@
 package database
 
 import (
+	"document-manager/api/models"
 	"os"
 
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,6 +21,33 @@ func InitDB() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	//inicializar com usuário master padrão
+	var count int64
+	var users []models.User
+	if err := db.Find(&users).Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	if count == 0 {
+		masterUser := models.User{
+			ID:       uuid.New(),
+			Name:     "master",
+			Email:    "master@email.com",
+			Password: "copa2026",
+			Master:   true,
+		}
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(masterUser.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+		masterUser.Password = string(hashedPassword)
+
+		if err := db.Create(&masterUser).Error; err != nil {
+			return nil, err
+		}
+	}
+
 	return db, nil
 }
 

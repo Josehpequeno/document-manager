@@ -17,7 +17,7 @@ var jwtKey = []byte(os.Getenv("API_SECRET"))
 
 type Claims struct {
 	UserID   uuid.UUID `json:"user_id"`
-	IsMaster *bool     `json:"is_master,omitempty"` //O uso de omitempty na tag JSON garante que o campo não será incluído no token se for nil.
+	IsMaster bool      `json:"is_master,omitempty"` //O uso de omitempty na tag JSON garante que o campo não será incluído no token se for nil.
 	jwt.StandardClaims
 }
 
@@ -37,7 +37,7 @@ func VerifyPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-func generateTokens(userID uuid.UUID, isMaster *bool) (string, string, error) {
+func generateTokens(userID uuid.UUID, isMaster bool) (string, string, error) {
 	//gerar token de acesso
 	accessTokenExp := time.Now().Add(time.Hour * 24)
 	accessTokenClaims := &Claims{
@@ -110,7 +110,6 @@ func LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
-
 	accessToken, refreshToken, err := generateTokens(user.ID, user.Master)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating tokens"})
@@ -182,7 +181,7 @@ func AuthMiddlewareMaster(c *gin.Context) {
 		return
 	}
 
-	if claims.IsMaster != nil && *claims.IsMaster {
+	if !claims.IsMaster {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		c.Abort()
 		return

@@ -19,7 +19,9 @@ func SetupRouter() *gin.Engine {
 	r.POST("/users", handlers.CreateUserHandler)
 	r.PUT("/users/:id", handlers.AuthMiddleware, handlers.UpdateUserHandler)
 	r.DELETE("/users/:id", handlers.AuthMiddleware, handlers.DeleteUserHandler)
-
+	//master
+	r.POST("/usersMaster", handlers.AuthMiddlewareMaster, handlers.CreateUserMasterHandler)
+	r.DELETE("/usersMaster/:id", handlers.AuthMiddlewareMaster, handlers.DeleteUserMasterHandler)
 	r.POST("/login", handlers.LoginHandler)
 
 	//swagger

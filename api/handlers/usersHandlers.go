@@ -36,14 +36,12 @@ type UserBody struct {
 	ID       uuid.UUID `json:"id"`
 	Name     string    `json:"name"`
 	Email    string    `json:"email"`
-	Master   bool      `json:"master"`
 	Password string    `json:"password"`
 }
 
 type UserBodyUpdate struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
-	Master   bool   `json:"master"`
 	Password string `json:"password"`
 }
 
@@ -150,6 +148,48 @@ func CreateUserHandler(c *gin.Context) {
 	c.JSON(201, newUser)
 }
 
+// CreateUserMasterHandler creates a new user master.
+// @Summary Create a new user master
+// @Description Create a new user master
+// @ID create-user-master
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body UserBody true "User object"
+// @Success 201 {object} UserResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /usersMaster [post]
+func CreateUserMasterHandler(c *gin.Context) {
+	var newUser models.User
+	// request body json
+	if err := c.BindJSON(&newUser); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid data"})
+		return
+	}
+
+	//gerar um novo uuid
+	newUser.ID = uuid.New()
+
+	//transformar senha do usuário em hash
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		return
+	}
+	newUser.Password = string(hashedPassword)
+	newUser.Master = true
+
+	db := database.GetDB()
+
+	if err := db.Create(&newUser).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		return
+	}
+
+	c.JSON(201, newUser)
+}
+
 // UpdateUserHandler updates a user by ID.
 // @Summary Update a user by ID
 // @Description Update a user by ID
@@ -196,9 +236,9 @@ func UpdateUserHandler(c *gin.Context) {
 		existingUser.Email = updatedUser.Email
 	}
 
-	if updatedUser.Master != existingUser.Master && updatedUser.Master != nil {
-		existingUser.Master = updatedUser.Master
-	}
+	// if updatedUser.Master != existingUser.Master && updatedUser.Master != nil {
+	// 	existingUser.Master = updatedUser.Master
+	// }
 
 	if updatedUser.Password != existingUser.Password && updatedUser.Password != "" {
 		existingUser.Password = updatedUser.Password
@@ -233,6 +273,56 @@ func DeleteUserHandler(c *gin.Context) {
 	var existingUser models.User
 	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
 		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	if existingUser.Master {
+		c.JSON(404, gin.H{"error": "You cannot delete a user master"})
+		return
+	}
+
+	if err := db.Delete(&existingUser).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Error deleting user", "details": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "User deleted successfully"})
+}
+
+// DeleteUserMasterHandler deletes a user master by ID.
+// @Summary Delete a user master by ID
+// @Description Delete a user master by ID
+// @ID delete-user-master
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} MessageResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security Bearer
+// @Router /usersMaster/{id} [delete]
+func DeleteUserMasterHandler(c *gin.Context) {
+	userID := c.Param("id")
+
+	db := database.GetDB()
+
+	var existingUser models.User
+	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	var count int64
+	var users []models.User
+	if err := db.Find(&users).Count(&count).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Error deleting user", "details": err.Error()})
+		return
+	}
+
+	if count == 1 {
+		c.JSON(500, gin.H{"error": "Error deleting user", "details": "You cannot delete the last user master"})
 		return
 	}
 

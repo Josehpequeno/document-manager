@@ -34,8 +34,6 @@ definitions:
         type: string
       id:
         type: string
-      master:
-        type: boolean
       name:
         type: string
       password:
@@ -45,8 +43,6 @@ definitions:
     properties:
       email:
         type: string
-      master:
-        type: boolean
       name:
         type: string
       password:
@@ -301,6 +297,73 @@ paths:
       security:
       - Bearer: []
       summary: Update a user by ID
+      tags:
+      - Users
+  /usersMaster:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user master
+      operationId: create-user-master
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create a new user master
+      tags:
+      - Users
+  /usersMaster/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user master by ID
+      operationId: delete-user-master
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Delete a user master by ID
       tags:
       - Users
 securityDefinitions:
