@@ -42,5 +42,6 @@ swag init --parseDependency --parseInternal
 Testar handlers
 
 ```
-GIN_MODE=release go test ./api/handlers
+cd api/handlers/ && 
+GIN_MODE=release go test
 ```

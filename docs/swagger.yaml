@@ -5,6 +5,17 @@ definitions:
       error:
         type: string
     type: object
+  handlers.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      message:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/handlers.UserResponse'
+    type: object
   handlers.MessageResponse:
     properties:
       message:
@@ -88,6 +99,34 @@ paths:
       summary: Get a greeting message
       tags:
       - Misc
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login of users
+      operationId: login
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Login
+      tags:
+      - Auth
   /users:
     get:
       consumes:
@@ -104,7 +143,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handlers.MessageResponse'
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -166,7 +205,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handlers.MessageResponse'
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -205,7 +244,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handlers.MessageResponse'
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -250,7 +289,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/handlers.MessageResponse'
+            $ref: '#/definitions/handlers.ErrorResponse'
         "404":
           description: Not Found
           schema:

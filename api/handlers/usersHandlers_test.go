@@ -5,6 +5,7 @@ import (
 	"document-manager/api/models"
 	"document-manager/database"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
+
+var accessToken string
+var refreshToken string
 
 func runInitDb() *gorm.DB {
 	db, err := database.InitDB()
@@ -32,25 +36,105 @@ func runInitDb() *gorm.DB {
 	return db
 }
 
+func createUserForTokenAcess() {
+	db := runInitDb()
+	db = db.Unscoped()
+	r := gin.Default()
+	r.POST("/users", CreateUserHandler)
+
+	newUser := UserBody{
+		Name:     "New user",
+		Email:    "new@example.com",
+		Master:   true,
+		Password: "password",
+	}
+	reqBody, err := json.Marshal(newUser)
+	if err != nil {
+		println("error", err)
+		return
+	}
+
+	req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	if http.StatusCreated != resp.Code {
+		println("error on create user")
+		return
+	}
+
+	var userResponse UserResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &userResponse)
+	fmt.Println("user response =>", userResponse, err)
+
+	r.POST("/login", LoginHandler)
+
+	loginBody := LoginBody{
+		UsernameOrEmail: "New user",
+		Password:        "password",
+	}
+	reqBody, err = json.Marshal(loginBody)
+	if err != nil {
+		println("error", err)
+		return
+	}
+
+	req, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp = httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	if http.StatusOK != resp.Code {
+		println("error on login user", resp.Code)
+		return
+	}
+
+	var loginResponse LoginResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &loginResponse)
+	fmt.Println("login response =>", loginResponse, err)
+	println("access token", loginResponse.AccessToken)
+	println("refresh token", loginResponse.RefreshToken)
+	accessToken = loginResponse.AccessToken
+	refreshToken = loginResponse.RefreshToken
+
+	var existingUser models.User
+	err = db.First(&existingUser, "email = ?", newUser.Email).Error
+	if err != nil {
+		println("error", err)
+		return
+	}
+	// Excluir o usuário após o teste
+	err = db.Delete(&existingUser).Error
+	if err != nil {
+		println("error", err)
+		return
+	}
+}
+
 func TestGetAllUsersHandler(t *testing.T) {
 	runInitDb()
+
 	r := gin.Default()
-	r.GET("/users", GetAllUsersHandler)
+	createUserForTokenAcess()
+	r.GET("/users", AuthMiddleware, GetAllUsersHandler)
 
 	req, _ := http.NewRequest("GET", "/users", nil)
+	req.Header.Set("Authorization", accessToken)
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
-	var response gin.H
+	var response UsersResponse
 	err := json.Unmarshal(resp.Body.Bytes(), &response)
 	assert.Nil(t, err)
-	users, exists := response["users"].([]interface{})
-	assert.True(t, exists)
-
-	usersLength := len(users)
+	// fmt.Println("users => ", response.Users)
+	// fmt.Println(response)
+	usersLength := len(response.Users)
 	// usando zero no lugar do mínimo de usuários esperados no banco de dados.
 	assert.GreaterOrEqual(t, usersLength, 0, "The length of 'users' should be greater than or equal to 0")
 }
@@ -74,9 +158,11 @@ func TestGetUserByIDHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	r := gin.Default()
-	r.GET("/users/:id", GetUserByIDHandler)
+	createUserForTokenAcess()
+	r.GET("/users/:id", AuthMiddleware, GetUserByIDHandler)
 
 	req, _ := http.NewRequest("GET", "/users/"+testUserID.String(), nil)
+	req.Header.Set("Authorization", accessToken)
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -151,7 +237,8 @@ func TestUpdateUserHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	r := gin.Default()
-	r.PUT("/users/:id", UpdateUserHandler)
+	createUserForTokenAcess()
+	r.PUT("/users/:id", AuthMiddleware, UpdateUserHandler)
 
 	updateUserData := UserBody{
 		Name:   "Update User",
@@ -163,6 +250,7 @@ func TestUpdateUserHandler(t *testing.T) {
 
 	req, _ := http.NewRequest("PUT", "/users/"+testUserID.String(), bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", accessToken)
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -200,9 +288,11 @@ func TestDeleteUserHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	r := gin.Default()
-	r.DELETE("/users/:id", DeleteUserHandler)
+	createUserForTokenAcess()
+	r.DELETE("/users/:id", AuthMiddleware, DeleteUserHandler)
 
 	req, _ := http.NewRequest("DELETE", "/users/"+testUserID.String(), nil)
+	req.Header.Set("Authorization", accessToken)
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)

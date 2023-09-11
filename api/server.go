@@ -20,6 +20,8 @@ func SetupRouter() *gin.Engine {
 	r.PUT("/users/:id", handlers.AuthMiddleware, handlers.UpdateUserHandler)
 	r.DELETE("/users/:id", handlers.AuthMiddleware, handlers.DeleteUserHandler)
 
+	r.POST("/login", handlers.LoginHandler)
+
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

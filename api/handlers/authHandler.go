@@ -21,6 +21,18 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+type LoginBody struct {
+	UsernameOrEmail string `json:"username_or_email"`
+	Password        string `json:"password"`
+}
+
+type LoginResponse struct {
+	Message      string       `json:"message"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
+	User         UserResponse `json:"user"`
+}
+
 func VerifyPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
@@ -59,11 +71,22 @@ func generateTokens(userID uuid.UUID, isMaster *bool) (string, string, error) {
 	return accessTokenStr, refreshTokenStr, nil
 }
 
+// LoginHandler make login of user.
+// @Summary Login
+// @Description login of users
+// @ID login
+// @Tags Auth
+// @Accept json
+// @Produce json
+//
+//	@Success 200 {object} LoginResponse
+//
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /login [post]
 func LoginHandler(c *gin.Context) {
-	var loginData struct {
-		UsernameOrEmail string `json:"username_or_email"`
-		Password        string `json:"password"`
-	}
+	var loginData LoginBody
 
 	if err := c.BindJSON(&loginData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
@@ -95,8 +118,10 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"message":       "Login successful",
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
+		"user":          user,
 	})
 }
 

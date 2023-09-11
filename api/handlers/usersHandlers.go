@@ -57,7 +57,7 @@ type UserBodyUpdate struct {
 //
 //	@Success 200 {object} UsersResponse
 //
-// @Failure 401 {object} MessageResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security Bearer
 // @Router /users [get]
@@ -84,7 +84,7 @@ func GetAllUsersHandler(c *gin.Context) {
 // @Param id path string true "User ID"
 // @Success 200 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} MessageResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security Bearer
@@ -161,7 +161,7 @@ func CreateUserHandler(c *gin.Context) {
 // @Param user body UserBodyUpdate true "User object"
 // @Success 200 {object} MessageWithUserResponse
 // @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} MessageResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security Bearer
@@ -220,7 +220,7 @@ func UpdateUserHandler(c *gin.Context) {
 // @Produce json
 // @Param id path string true "User ID"
 // @Success 200 {object} MessageResponse
-// @Failure 401 {object} MessageResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security Bearer
