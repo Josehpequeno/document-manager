@@ -86,9 +86,13 @@ func createUserForTokenAcess() {
 
 	var loginResponse LoginResponse
 	err = json.Unmarshal(resp.Body.Bytes(), &loginResponse)
-	fmt.Println("login response =>", loginResponse, err)
-	println("access token", loginResponse.AccessToken)
-	println("refresh token", loginResponse.RefreshToken)
+	if err != nil {
+		println("error on login user", err)
+		return
+	}
+	fmt.Println("login response =>", loginResponse)
+	// println("access token", loginResponse.AccessToken)
+	// println("refresh token", loginResponse.RefreshToken)
 	accessToken = loginResponse.AccessToken
 	refreshToken = loginResponse.RefreshToken
 
@@ -226,6 +230,7 @@ func TestCreateUserMasterHandler(t *testing.T) {
 
 	req, _ := http.NewRequest("POST", "/usersMaster", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", accessToken)
 
 	resp := httptest.NewRecorder()
 	r.ServeHTTP(resp, req)
@@ -353,7 +358,7 @@ func TestDeleteUserMasterHandler(t *testing.T) {
 	createUserForTokenAcess()
 	r.DELETE("/usersMaster/:id", AuthMiddlewareMaster, DeleteUserMasterHandler)
 
-	req, _ := http.NewRequest("DELETE", "/users/"+testUserID.String(), nil)
+	req, _ := http.NewRequest("DELETE", "/usersMaster/"+testUserID.String(), nil)
 	req.Header.Set("Authorization", accessToken)
 
 	resp := httptest.NewRecorder()
