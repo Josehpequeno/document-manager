@@ -3,6 +3,8 @@ package handlers
 import (
 	"document-manager/api/models"
 	"document-manager/database"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,6 +13,11 @@ import (
 
 type ErrorResponse struct {
 	ErrorMessage string `json:"error"`
+}
+
+type ErrorResponseWithDetails struct {
+	ErrorMessage string `json:"error"`
+	Details      string `json:"details"`
 }
 
 type MessageResponse struct {
@@ -52,24 +59,67 @@ type UserBodyUpdate struct {
 // @Tags Users
 // @Accept json
 // @Produce json
+// @Param start query integer false "Start index for pagination" default(0)
+// @Param limit query integer false "Maximum number of users to retrieve per page" default(10)
+// @Param sort query string false "Field to sort by (id, name, email)" default(id)
+// @Param sortDirection query string false "Sort direction (asc or desc)" default(asc)
 //
 //	@Success 200 {object} UsersResponse
 //
 // @Failure 401 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponseWithDetails
 // @Security Bearer
 // @Router /users [get]
 func GetAllUsersHandler(c *gin.Context) {
+	//extract query params
+	start := c.DefaultQuery("start", "0")
+	limit := c.DefaultQuery("limit", "10")
+	sort := c.DefaultQuery("sort", "id")
+	sortDir := c.DefaultQuery("dir", "asc")
+
+	//validate and convert params
+	startInt, err := strconv.Atoi(start)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid 'start' parameter"})
+		return
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid 'limit' parameter"})
+		return
+	}
+
+	//validate and sanitize sorting field
+	var sortField string
+	switch sort {
+	case "id", "name", "email":
+		sortField = sort
+	default:
+		sortField = "id"
+	}
+
+	var sortOrder string
+	switch sortDir {
+	case "asc", "desc":
+		sortOrder = sortDir
+	default:
+		sortOrder = "asc"
+	}
+
 	db := database.GetDB()
 
 	var users []models.User
 
-	if err := db.Find(&users).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error retrieving users", "details": err.Error()})
+	//query the database with pagination and sorting
+	query := db.Offset(startInt).Limit(limitInt).Order(sortField + " " + sortOrder).Find(&users)
+	if query.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving users", "details": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"users": users})
+	c.JSON(http.StatusOK, gin.H{"users": users})
 }
 
 // GetUserByIDHandler gets a user by ID.
@@ -91,7 +141,7 @@ func GetUserByIDHandler(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid user ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
@@ -99,11 +149,11 @@ func GetUserByIDHandler(c *gin.Context) {
 
 	var existingUser models.User
 	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(404, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	c.JSON(200, existingUser)
+	c.JSON(http.StatusOK, existingUser)
 
 }
 
@@ -117,13 +167,13 @@ func GetUserByIDHandler(c *gin.Context) {
 // @Param user body UserBody true "User object"
 // @Success 201 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponseWithDetails
 // @Router /users [post]
 func CreateUserHandler(c *gin.Context) {
 	var newUser models.User
 	// request body json
 	if err := c.BindJSON(&newUser); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
@@ -133,7 +183,7 @@ func CreateUserHandler(c *gin.Context) {
 	//transformar senha do usuário em hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
 		return
 	}
 	newUser.Password = string(hashedPassword)
@@ -141,11 +191,11 @@ func CreateUserHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	if err := db.Create(&newUser).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
 		return
 	}
 
-	c.JSON(201, newUser)
+	c.JSON(http.StatusCreated, newUser)
 }
 
 // CreateUserMasterHandler creates a new user master.
@@ -158,13 +208,13 @@ func CreateUserHandler(c *gin.Context) {
 // @Param user body UserBody true "User object"
 // @Success 201 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponseWithDetails
 // @Router /usersMaster [post]
 func CreateUserMasterHandler(c *gin.Context) {
 	var newUser models.User
 	// request body json
 	if err := c.BindJSON(&newUser); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
@@ -174,7 +224,7 @@ func CreateUserMasterHandler(c *gin.Context) {
 	//transformar senha do usuário em hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
 		return
 	}
 	newUser.Password = string(hashedPassword)
@@ -183,11 +233,11 @@ func CreateUserMasterHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	if err := db.Create(&newUser).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
 		return
 	}
 
-	c.JSON(201, newUser)
+	c.JSON(http.StatusCreated, newUser)
 }
 
 // UpdateUserHandler updates a user by ID.
@@ -203,7 +253,7 @@ func CreateUserMasterHandler(c *gin.Context) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponseWithDetails
 // @Security Bearer
 // @Router /users/{id} [put]
 func UpdateUserHandler(c *gin.Context) {
@@ -213,18 +263,18 @@ func UpdateUserHandler(c *gin.Context) {
 
 	var existingUser models.User
 	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(404, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
 	var updatedUser models.User
 	if err := c.BindJSON(&updatedUser); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
 	if updatedUser.Name == "" && updatedUser.Email == "" {
-		c.JSON(400, gin.H{"error": "Name and Email cannot be empty"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Name and Email cannot be empty"})
 		return
 	}
 
@@ -245,10 +295,10 @@ func UpdateUserHandler(c *gin.Context) {
 	}
 
 	if err := db.Save(&existingUser).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error updating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating user", "details": err.Error()})
 	}
 
-	c.JSON(200, gin.H{"message": "User updated successfully", "user": existingUser})
+	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "user": existingUser})
 }
 
 // DeleteUserHandler deletes a user by ID.
@@ -262,7 +312,7 @@ func UpdateUserHandler(c *gin.Context) {
 // @Success 200 {object} MessageResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponseWithDetails
 // @Security Bearer
 // @Router /users/{id} [delete]
 func DeleteUserHandler(c *gin.Context) {
@@ -272,21 +322,21 @@ func DeleteUserHandler(c *gin.Context) {
 
 	var existingUser models.User
 	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(404, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
 	if existingUser.Master {
-		c.JSON(404, gin.H{"error": "You cannot delete a user master"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "You cannot delete a user master"})
 		return
 	}
 
 	if err := db.Delete(&existingUser).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error deleting user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
 // DeleteUserMasterHandler deletes a user master by ID.
@@ -300,7 +350,7 @@ func DeleteUserHandler(c *gin.Context) {
 // @Success 200 {object} MessageResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponseWithDetails
 // @Security Bearer
 // @Router /usersMaster/{id} [delete]
 func DeleteUserMasterHandler(c *gin.Context) {
@@ -310,26 +360,26 @@ func DeleteUserMasterHandler(c *gin.Context) {
 
 	var existingUser models.User
 	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(404, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
 	var count int64
 	var users []models.User
 	if err := db.Find(&users).Count(&count).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error deleting user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": err.Error()})
 		return
 	}
 
 	if count == 1 {
-		c.JSON(500, gin.H{"error": "Error deleting user", "details": "You cannot delete the last user master"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": "You cannot delete the last user master"})
 		return
 	}
 
 	if err := db.Delete(&existingUser).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Error deleting user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

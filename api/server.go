@@ -24,6 +24,9 @@ func SetupRouter() *gin.Engine {
 	r.DELETE("/usersMaster/:id", handlers.AuthMiddlewareMaster, handlers.DeleteUserMasterHandler)
 	r.POST("/login", handlers.LoginHandler)
 
+	// documents
+	r.GET("/documents", handlers.AuthMiddleware, handlers.GetAllDocumentsHandler)
+	r.GET("/documents/:id", handlers.AuthMiddleware, handlers.GetDocumentByIDHandler)
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

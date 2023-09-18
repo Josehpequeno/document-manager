@@ -1,7 +1,32 @@
 basePath: /
 definitions:
+  handlers.DocumentResponse:
+    properties:
+      id:
+        type: string
+      owner_id:
+        type: string
+      owner_name:
+        type: string
+      title:
+        type: string
+    type: object
+  handlers.DocumentsResponse:
+    properties:
+      documents:
+        items:
+          $ref: '#/definitions/handlers.DocumentResponse'
+        type: array
+    type: object
   handlers.ErrorResponse:
     properties:
+      error:
+        type: string
+    type: object
+  handlers.ErrorResponseWithDetails:
+    properties:
+      details:
+        type: string
       error:
         type: string
     type: object
@@ -95,6 +120,97 @@ paths:
       summary: Get a greeting message
       tags:
       - Misc
+  /documents:
+    get:
+      consumes:
+      - application/json
+      description: Get all documents
+      operationId: get-all-documents
+      parameters:
+      - default: 0
+        description: Start index for pagination
+        in: query
+        name: start
+        type: integer
+      - default: 10
+        description: Maximum number of documents to retrieve per page
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Field to sort by (id, title, owner)
+        in: query
+        name: sort
+        type: string
+      - default: asc
+        description: Sort direction (asc or desc)
+        in: query
+        name: sortDirection
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DocumentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
+      security:
+      - Bearer: []
+      summary: Get all documents
+      tags:
+      - Documents
+  /documents/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a document by ID
+      operationId: get-document-by-id
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DocumentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a document by ID
+      tags:
+      - Documents
   /login:
     post:
       consumes:
@@ -129,6 +245,27 @@ paths:
       - application/json
       description: Get all users
       operationId: get-all-users
+      parameters:
+      - default: 0
+        description: Start index for pagination
+        in: query
+        name: start
+        type: integer
+      - default: 10
+        description: Maximum number of users to retrieve per page
+        in: query
+        name: limit
+        type: integer
+      - default: id
+        description: Field to sort by (id, name, email)
+        in: query
+        name: sort
+        type: string
+      - default: asc
+        description: Sort direction (asc or desc)
+        in: query
+        name: sortDirection
+        type: string
       produces:
       - application/json
       responses:
@@ -136,6 +273,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handlers.UsersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -143,7 +284,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
       security:
       - Bearer: []
       summary: Get all users
@@ -175,7 +316,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
       summary: Create a new user
       tags:
       - Users
@@ -209,7 +350,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
       security:
       - Bearer: []
       summary: Delete a user by ID
@@ -293,7 +434,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
       security:
       - Bearer: []
       summary: Update a user by ID
@@ -326,7 +467,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
       summary: Create a new user master
       tags:
       - Users
@@ -360,7 +501,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/handlers.ErrorResponseWithDetails'
       security:
       - Bearer: []
       summary: Delete a user master by ID

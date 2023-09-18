@@ -42,6 +42,11 @@ func main() {
 		log.Fatal("Erro ao criar a tabela 'users':", err)
 	}
 
+	err = db.AutoMigrate(&models.Document{})
+	if err != nil {
+		log.Fatal("Erro ao criar a tabela 'Documents':", err)
+	}
+
 	router := api.SetupRouter()
 
 	router.Run("localhost:3450")
