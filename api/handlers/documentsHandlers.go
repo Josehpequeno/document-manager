@@ -5,6 +5,7 @@ import (
 	"document-manager/database"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,6 +20,13 @@ type DocumentResponse struct {
 	Title     string    `json:"title"`
 	OwnerID   string    `json:"owner_id"`
 	OwnerName string    `json:"owner_name"`
+}
+
+type DocumentRequest struct {
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description"`
+	OwnerID     string `json:"owner_id"`
+	OwnerName   string `json:"owner_name"`
 }
 
 // GetAllDocumentsHandler gets all documents.
@@ -120,4 +128,144 @@ func GetDocumentByIDHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, existingDocument)
+}
+
+// CreateDocumentHandler creates a new document.
+// @Summary Create a new document
+// @Description Create a new document
+// @ID create-document
+// @Tags Documents
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "Document file"
+// @Success 201 {object} DocumentResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /documents [post]
+func CreateDocumentHandler(c *gin.Context) {
+	err := c.Request.ParseMultipartForm(200 << 20) // 200 MB limit
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing form", "details": err.Error()})
+		return
+	}
+
+	var docRequest DocumentRequest
+	if err := c.Bind(&docRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
+		return
+	}
+
+	//handle file upload
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required", "details": err.Error()})
+		return
+	}
+	defer file.Close()
+
+	filename := header.Filename + time.Now().Format("2006-01-02_15-04-05")
+
+	err = c.SaveUploadedFile(header, "./uploads/"+filename)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file", "details": err.Error()})
+		return
+	}
+
+	db := database.GetDB()
+
+	newDocument := models.Document{
+		Title:       docRequest.Title,
+		Description: docRequest.Description,
+		OwnerID:     docRequest.OwnerID,
+		OwnerName:   docRequest.OwnerName,
+		FilePath:    "./uploads/" + filename,
+	}
+
+	if err := db.Create(&newDocument).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating document", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, newDocument)
+}
+
+// UploadDocumentHandler uploads a document with a file.
+// @Summary Upload a document with a file
+// @Description Upload a document with a file
+// @ID upload-document
+// @Tags Documents
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "Document file"
+// @Success 200 {object} DocumentResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /documents/upload/{id} [put]
+func UploadDocumentHandler(c *gin.Context) {
+	documentIDStr := c.Param("id")
+	documentID, err := uuid.Parse(documentIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
+		return
+	}
+
+	err = c.Request.ParseMultipartForm(200 << 20)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form"})
+		return
+	}
+
+	var docRequest DocumentRequest
+	if err := c.Bind(&docRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
+		return
+	}
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
+		return
+	}
+	defer file.Close()
+
+	filename := header.Filename
+
+	db := database.GetDB()
+	document := models.Document{
+		ID:          documentID,
+		Title:       docRequest.Title,
+		Description: docRequest.Description,
+		OwnerID:     docRequest.OwnerID,
+		OwnerName:   docRequest.OwnerName,
+		FilePath:    "./uploads/" + filename,
+	}
+
+	if err := db.Save(&document).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document information"})
+		return
+	}
+
+	response := DocumentResponse{
+		ID:        document.ID,
+		Title:     document.Title,
+		OwnerID:   document.OwnerID,
+		OwnerName: document.OwnerName,
+	}
+
+	c.JSON(http.StatusOK, response)
+
+}
+
+// UploadDocumentWithoutFileHandler uploads a document without a file.
+// @Summary Upload a document without a file
+// @Description Upload a document without a file
+// @ID upload-document-no-file
+// @Tags Documents
+// @Produce json
+// @Success 200 {object} DocumentResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /documents/{id} [put]
+func UploadDocumentWithoutFileHandler(c *gin.Context) {
+	// Your implementation here
 }
