@@ -4,6 +4,7 @@ import (
 	"document-manager/api/models"
 	"document-manager/database"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -267,5 +268,81 @@ func UploadDocumentHandler(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /documents/{id} [put]
 func UploadDocumentWithoutFileHandler(c *gin.Context) {
-	// Your implementation here
+	documentIDStr := c.Param("id")
+	documentID, err := uuid.Parse(documentIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
+		return
+	}
+
+	var docRequest DocumentRequest
+	if err := c.Bind(&docRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
+		return
+	}
+
+	db := database.GetDB()
+	document := models.Document{
+		ID:          documentID,
+		Title:       docRequest.Title,
+		Description: docRequest.Description,
+		OwnerID:     docRequest.OwnerID,
+		OwnerName:   docRequest.OwnerName,
+	}
+
+	if err := db.Save(&document).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document information"})
+		return
+	}
+
+	response := DocumentResponse{
+		ID:        document.ID,
+		Title:     document.Title,
+		OwnerID:   document.OwnerID,
+		OwnerName: document.OwnerName,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// DeleteDocumentHandler deletes a document by ID.
+// @Summary Delete a document by ID
+// @Description Delete a document by ID
+// @ID delete-document
+// @Tags Documents
+// @Accept json
+// @Produce json
+// @Param id path string true "Document ID"
+// @Success 200 {string} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /documents/{id} [delete]
+func DeleteDocumentHandler(c *gin.Context) {
+	documentIDStr := c.Param("id")
+	documentID, err := uuid.Parse(documentIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
+		return
+	}
+
+	db := database.GetDB()
+
+	var existingDocument models.Document
+	if err := db.Where("id = ?", documentID).First(&existingDocument).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+	}
+
+	//delete associated file
+	if err := os.Remove(existingDocument.FilePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document file", "details": err.Error()})
+		return
+	}
+
+	if err := db.Delete(&existingDocument).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Document deleted successfully"})
 }
