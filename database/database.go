@@ -22,11 +22,15 @@ func InitDB() (*gorm.DB, error) {
 		return nil, err
 	}
 
+	return db, nil
+}
+
+func InitMasterUser() error {
 	//inicializar com usuário master padrão
 	var count int64
 	var users []models.User
 	if err := db.Find(&users).Count(&count).Error; err != nil {
-		return nil, err
+		return err
 	}
 
 	if count == 0 {
@@ -39,16 +43,15 @@ func InitDB() (*gorm.DB, error) {
 		}
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(masterUser.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		masterUser.Password = string(hashedPassword)
 
 		if err := db.Create(&masterUser).Error; err != nil {
-			return nil, err
+			return err
 		}
 	}
-
-	return db, nil
+	return nil
 }
 
 // GetDB retorna a instância do banco de dados para ser usada nos modelos e nas rotas

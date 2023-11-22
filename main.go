@@ -31,7 +31,7 @@ func main() {
 	//Inicializar a conexão com o banco de dados
 	db, err := database.InitDB()
 	if err != nil {
-		log.Fatal("Erro ao configurar a conexão com o banco de dados", err)
+		log.Fatal("Erro ao configurar a conexão com o banco de dados: ", err)
 	}
 	//será executado no final do bloco
 	// defer db.Close()
@@ -39,12 +39,18 @@ func main() {
 	//executar a migração automática
 	err = db.AutoMigrate(&models.User{})
 	if err != nil {
-		log.Fatal("Erro ao criar a tabela 'users':", err)
+		log.Fatal("Erro ao criar a tabela 'users': ", err)
+	}
+
+	//Inicializar a conexão com o banco de dados
+	err = database.InitMasterUser()
+	if err != nil {
+		log.Fatal("Erro ao criar primeiro usuário master: ", err)
 	}
 
 	err = db.AutoMigrate(&models.Document{})
 	if err != nil {
-		log.Fatal("Erro ao criar a tabela 'Documents':", err)
+		log.Fatal("Erro ao criar a tabela 'Documents': ", err)
 	}
 
 	router := api.SetupRouter()

@@ -27,15 +27,24 @@ Postgres vai está rodando na porta 5432 e o pgadmin na 8080 de acordo com as cr
 # Iniciar variáveis de ambiente
 
 ```shell
-chmod +x initENV.sh &&
-source initENV.sh
+chmod +x .initENV.sh &&
+source .initENV.sh
 ```
 
 # Gerar doc swagger
+### Instalar swag
+
+```shell
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+### Executar swag
 
 ```shell
 swag init --parseDependency --parseInternal
 ```
+### Rota swag
+/swagger/index.html
 
 # Testes
 
