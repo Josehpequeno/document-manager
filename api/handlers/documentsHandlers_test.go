@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"document-manager/api/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,6 +14,62 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
+	db := runInitDb()
+	// Migrate the models
+	err := db.AutoMigrate(&models.Document{})
+	if err != nil {
+		t.Fatal("Error migrating models:", err)
+	}
+	// Create a test document
+	testDocumentID := uuid.New()
+	testDocument := models.Document{
+		ID:        testDocumentID,
+		Title:     "Test Document",
+		OwnerID:   userId,
+		OwnerName: userName,
+	}
+	// Save the test document to the database
+	db.Create(&testDocument)
+	var existingDocument models.Document
+	err = db.First(&existingDocument, "ID = ?", testDocument.ID).Error
+	assert.Nil(t, err)
+
+	r := gin.Default()
+	createUserForTokenAcess()
+	r.PUT("/documents/:id", AuthMiddleware, UpdateDocumentWithoutFileHandler)
+
+	updateDocumentData := DocumentRequest{
+		Title:       "Test Document update",
+		Description: "Test Document update description",
+		OwnerID:     userId,
+		OwnerName:   userName,
+	}
+	reqBody, err := json.Marshal(updateDocumentData)
+	assert.Nil(t, err)
+
+	req, _ := http.NewRequest("PUT", "/documents/"+testDocumentID.String(), bytes.NewBuffer(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", accessToken)
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var response MessageWithDocumentResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+	assert.Equal(t, "Document updated successfully", response.Message)
+	assert.Equal(t, testDocumentID, response.Document.ID)
+	assert.Equal(t, updateDocumentData.Description, response.Document.Description)
+	assert.Equal(t, updateDocumentData.OwnerID, response.Document.OwnerID)
+	assert.Equal(t, updateDocumentData.OwnerName, response.Document.OwnerName)
+	assert.Equal(t, updateDocumentData.Title, response.Document.Title)
+	err = db.Unscoped().Delete(&existingDocument).Error
+	assert.Nil(t, err)
+}
 
 func TestDeleteDocumentHandler(t *testing.T) {
 	db := runInitDb()
@@ -26,10 +84,16 @@ func TestDeleteDocumentHandler(t *testing.T) {
 	testDocument := models.Document{
 		ID:        testDocumentID,
 		Title:     "Test Document",
-		OwnerID:   "test_owner_id",
-		OwnerName: "Test Owner",
-		FilePath:  "./upload/file.pdf", // Adjust this path based on your actual implementation
+		OwnerID:   userId,
+		OwnerName: userName,
+		FilePath:  "/home/naota/document-manager/documents/file.pdf", // Adjust this path based on your actual implementation
 	}
+
+	directory, err := os.Getwd() //get the current directory using the built-in function
+	if err != nil {
+		fmt.Println(err) //print the error if obtained
+	}
+	fmt.Println("Current working directory:", directory)
 
 	// Save the test document to the database
 	err = db.Create(&testDocument).Error
@@ -37,11 +101,11 @@ func TestDeleteDocumentHandler(t *testing.T) {
 
 	// Create a Gin router
 	r := gin.Default()
-	r.DELETE("/documents/:id", DeleteDocumentHandler)
+	r.DELETE("/documents/:id", AuthMiddleware, DeleteDocumentHandler)
 
 	// Create a request to delete the test document
 	req, _ := http.NewRequest("DELETE", "/documents/"+testDocumentID.String(), nil)
-
+	req.Header.Set("Authorization", accessToken)
 	// Create a response recorder
 	resp := httptest.NewRecorder()
 

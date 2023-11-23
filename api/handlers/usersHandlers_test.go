@@ -20,6 +20,8 @@ import (
 
 var accessToken string
 var refreshToken string
+var userId string
+var userName string
 
 func runInitDb() *gorm.DB {
 	db, err := database.InitDB()
@@ -95,6 +97,8 @@ func createUserForTokenAcess() {
 	// println("refresh token", loginResponse.RefreshToken)
 	accessToken = loginResponse.AccessToken
 	refreshToken = loginResponse.RefreshToken
+	userId = loginResponse.User.ID.String()
+	userName = loginResponse.User.Name
 
 	var existingUser models.User
 	err = db.First(&existingUser, "email = ?", newUser.Email).Error

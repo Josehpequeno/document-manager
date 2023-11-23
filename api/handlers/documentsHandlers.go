@@ -3,6 +3,7 @@ package handlers
 import (
 	"document-manager/api/models"
 	"document-manager/database"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,10 +18,11 @@ type DocumentsResponse struct {
 }
 
 type DocumentResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Title     string    `json:"title"`
-	OwnerID   string    `json:"owner_id"`
-	OwnerName string    `json:"owner_name"`
+	ID          uuid.UUID `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	OwnerID     string    `json:"owner_id"`
+	OwnerName   string    `json:"owner_name"`
 }
 
 type DocumentRequest struct {
@@ -28,6 +30,11 @@ type DocumentRequest struct {
 	Description string `json:"description"`
 	OwnerID     string `json:"owner_id"`
 	OwnerName   string `json:"owner_name"`
+}
+
+type MessageWithDocumentResponse struct {
+	Message  string           `json:"message"`
+	Document DocumentResponse `json:"document"`
 }
 
 // GetAllDocumentsHandler gets all documents.
@@ -263,11 +270,11 @@ func UploadDocumentHandler(c *gin.Context) {
 // @ID upload-document-no-file
 // @Tags Documents
 // @Produce json
-// @Success 200 {object} DocumentResponse
+// @Success 200 {object} MessageWithDocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /documents/{id} [put]
-func UploadDocumentWithoutFileHandler(c *gin.Context) {
+func UpdateDocumentWithoutFileHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")
 	documentID, err := uuid.Parse(documentIDStr)
 	if err != nil {
@@ -295,14 +302,15 @@ func UploadDocumentWithoutFileHandler(c *gin.Context) {
 		return
 	}
 
-	response := DocumentResponse{
-		ID:        document.ID,
-		Title:     document.Title,
-		OwnerID:   document.OwnerID,
-		OwnerName: document.OwnerName,
+	documentResponse := DocumentResponse{
+		ID:          document.ID,
+		Title:       document.Title,
+		Description: document.Description,
+		OwnerID:     document.OwnerID,
+		OwnerName:   document.OwnerName,
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{"message": "Document updated successfully", "document": documentResponse})
 }
 
 // DeleteDocumentHandler deletes a document by ID.
@@ -335,6 +343,7 @@ func DeleteDocumentHandler(c *gin.Context) {
 
 	//delete associated file
 	if err := os.Remove(existingDocument.FilePath); err != nil {
+		fmt.Println("Delete err =>", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document file", "details": err.Error()})
 		return
 	}
