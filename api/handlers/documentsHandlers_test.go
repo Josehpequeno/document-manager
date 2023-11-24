@@ -5,15 +5,96 @@ import (
 	"document-manager/api/models"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestCreateDocumentHandler(t *testing.T) {
+	createUserForTokenAcess()
+	db := runInitDb()
+
+	directory, err := os.Getwd() //get the current directory using the built-in function
+	if err != nil {
+		fmt.Println(err) //print the error if obtained
+	}
+	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + "file.pdf"
+	// _, fileErr := os.Create(filepath)
+	// assert.Nil(t, fileErr)
+
+	testDocumentID := uuid.New()
+	newDocument := models.Document{
+		ID:        testDocumentID,
+		Title:     "Test Document",
+		OwnerID:   userId,
+		OwnerName: userName,
+	}
+
+	documentJSON, err := json.Marshal(newDocument)
+	assert.Nil(t, err)
+
+	r := gin.Default()
+
+	r.POST("/documents", AuthMiddleware, CreateDocumentHandler)
+
+	// Criar um buffer para armazenar os dados do formulário
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+
+	// Adicionar o JSON como um campo do formulário
+	err = writer.WriteField("document", string(documentJSON))
+	assert.Nil(t, err)
+
+	// Abrir o arquivo PDF
+	file, err := os.Open(filepath)
+	assert.Nil(t, err)
+	defer file.Close()
+
+	// Adicionar o arquivo PDF como um campo do formulário
+	part, err := writer.CreateFormFile("file", "file.pdf")
+	assert.Nil(t, err)
+	_, err = io.Copy(part, file)
+	assert.Nil(t, err)
+
+	// Finalizar o formulário
+	writer.Close()
+	req, _ := http.NewRequest("POST", "/documents", &b)
+	req.Header.Set("Authorization", accessToken)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusCreated, resp.Code)
+
+	var existingDocument models.Document
+	err = db.Where("id = ?", testDocumentID).First(&existingDocument).Error
+	assert.Nil(t, err)
+
+	_, fileErr := os.Stat(existingDocument.FilePath)
+	assert.Nil(t, fileErr)
+
+	var response DocumentResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+
+	// _ = os.Remove(newDocument.FilePath)
+}
+
+// func TestUpdateDocumentHandler(t *testing.T) {
+
+// }
 
 func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
 	db := runInitDb()
@@ -37,7 +118,6 @@ func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	r := gin.Default()
-	createUserForTokenAcess()
 	r.PUT("/documents/:id", AuthMiddleware, UpdateDocumentWithoutFileHandler)
 
 	updateDocumentData := DocumentRequest{
@@ -86,15 +166,21 @@ func TestDeleteDocumentHandler(t *testing.T) {
 		Title:     "Test Document",
 		OwnerID:   userId,
 		OwnerName: userName,
-		FilePath:  "/home/naota/document-manager/documents/file.pdf", // Adjust this path based on your actual implementation
+		FilePath:  "/home/naota/document-manager/documents/file (cópia).pdf", // Adjust this path based on your actual implementation
 	}
 
 	directory, err := os.Getwd() //get the current directory using the built-in function
 	if err != nil {
 		fmt.Println(err) //print the error if obtained
 	}
-	fmt.Println("Current working directory:", directory)
+	Original_Path := strings.Split(directory, "document-manager")[0] + "document-manager/documents/file (cópia).pdf"
+	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + testDocumentID.String() + ".pdf"
+	e := os.Rename(Original_Path, filepath)
+	if e != nil {
+		log.Fatal(e)
+	}
 
+	testDocument.FilePath = filepath
 	// Save the test document to the database
 	err = db.Create(&testDocument).Error
 	assert.Nil(t, err)

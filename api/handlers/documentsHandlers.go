@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -170,10 +170,16 @@ func CreateDocumentHandler(c *gin.Context) {
 		return
 	}
 	defer file.Close()
+	documentID := uuid.New()
+	// filename := header.Filename + time.Now().Format("2006-01-02_15-04-05")
 
-	filename := header.Filename + time.Now().Format("2006-01-02_15-04-05")
+	directory, err := os.Getwd() //get the current directory using the built-in function
+	if err != nil {
+		fmt.Println(err) //print the error if obtained
+	}
+	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentID.String() + ".pdf"
 
-	err = c.SaveUploadedFile(header, "./uploads/"+filename)
+	err = c.SaveUploadedFile(header, filepath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file", "details": err.Error()})
 		return
@@ -182,11 +188,12 @@ func CreateDocumentHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	newDocument := models.Document{
+		ID:          documentID,
 		Title:       docRequest.Title,
 		Description: docRequest.Description,
 		OwnerID:     docRequest.OwnerID,
 		OwnerName:   docRequest.OwnerName,
-		FilePath:    "./uploads/" + filename,
+		FilePath:    filepath,
 	}
 
 	if err := db.Create(&newDocument).Error; err != nil {
@@ -209,7 +216,7 @@ func CreateDocumentHandler(c *gin.Context) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /documents/upload/{id} [put]
-func UploadDocumentHandler(c *gin.Context) {
+func UpdateDocumentHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")
 	documentID, err := uuid.Parse(documentIDStr)
 	if err != nil {
@@ -245,8 +252,15 @@ func UploadDocumentHandler(c *gin.Context) {
 		Description: docRequest.Description,
 		OwnerID:     docRequest.OwnerID,
 		OwnerName:   docRequest.OwnerName,
-		FilePath:    "./uploads/" + filename,
+		FilePath:    "./documents/" + filename,
 	}
+
+	directory, err := os.Getwd() //get the current directory using the built-in function
+	if err != nil {
+		fmt.Println(err) //print the error if obtained
+	}
+	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentID.String() + ".pdf"
+	document.FilePath = filepath
 
 	if err := db.Save(&document).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document information"})
@@ -342,7 +356,13 @@ func DeleteDocumentHandler(c *gin.Context) {
 	}
 
 	//delete associated file
-	if err := os.Remove(existingDocument.FilePath); err != nil {
+	directory, err := os.Getwd() //get the current directory using the built-in function
+	if err != nil {
+		fmt.Println(err) //print the error if obtained
+	}
+	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentIDStr + ".pdf"
+
+	if err := os.Remove(filepath); err != nil {
 		fmt.Println("Delete err =>", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document file", "details": err.Error()})
 		return
