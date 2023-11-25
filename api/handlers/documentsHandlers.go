@@ -159,6 +159,7 @@ func CreateDocumentHandler(c *gin.Context) {
 
 	var docRequest DocumentRequest
 	if err := c.Bind(&docRequest); err != nil {
+		fmt.Println("create data: ", docRequest)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
 		return
 	}
@@ -363,7 +364,6 @@ func DeleteDocumentHandler(c *gin.Context) {
 	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentIDStr + ".pdf"
 
 	if err := os.Remove(filepath); err != nil {
-		fmt.Println("Delete err =>", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document file", "details": err.Error()})
 		return
 	}

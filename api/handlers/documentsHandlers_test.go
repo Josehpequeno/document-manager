@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +17,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
+
+var idDocumentToDelete string
 
 func TestCreateDocumentHandler(t *testing.T) {
 	createUserForTokenAcess()
@@ -31,16 +32,14 @@ func TestCreateDocumentHandler(t *testing.T) {
 	// _, fileErr := os.Create(filepath)
 	// assert.Nil(t, fileErr)
 
-	testDocumentID := uuid.New()
 	newDocument := models.Document{
-		ID:        testDocumentID,
 		Title:     "Test Document",
 		OwnerID:   userId,
 		OwnerName: userName,
 	}
 
-	documentJSON, err := json.Marshal(newDocument)
-	assert.Nil(t, err)
+	// documentJSON, err := json.Marshal(newDocument)
+	// assert.Nil(t, err)
 
 	r := gin.Default()
 
@@ -51,9 +50,12 @@ func TestCreateDocumentHandler(t *testing.T) {
 	writer := multipart.NewWriter(&b)
 
 	// Adicionar o JSON como um campo do formulário
-	err = writer.WriteField("document", string(documentJSON))
+	err = writer.WriteField("Title", newDocument.Title)
 	assert.Nil(t, err)
-
+	err = writer.WriteField("OwnerId", newDocument.OwnerID)
+	assert.Nil(t, err)
+	err = writer.WriteField("OwnerName", newDocument.OwnerName)
+	assert.Nil(t, err)
 	// Abrir o arquivo PDF
 	file, err := os.Open(filepath)
 	assert.Nil(t, err)
@@ -77,17 +79,17 @@ func TestCreateDocumentHandler(t *testing.T) {
 	r.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusCreated, resp.Code)
+	var response DocumentResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+	idDocumentToDelete = response.ID.String()
 
 	var existingDocument models.Document
-	err = db.Where("id = ?", testDocumentID).First(&existingDocument).Error
+	err = db.Where("id = ?", response.ID).First(&existingDocument).Error
 	assert.Nil(t, err)
 
 	_, fileErr := os.Stat(existingDocument.FilePath)
 	assert.Nil(t, fileErr)
-
-	var response DocumentResponse
-	err = json.Unmarshal(resp.Body.Bytes(), &response)
-	assert.Nil(t, err)
 
 	// _ = os.Remove(newDocument.FilePath)
 }
@@ -160,37 +162,21 @@ func TestDeleteDocumentHandler(t *testing.T) {
 	}
 
 	// Create a test document
-	testDocumentID := uuid.New()
-	testDocument := models.Document{
-		ID:        testDocumentID,
-		Title:     "Test Document",
-		OwnerID:   userId,
-		OwnerName: userName,
-		FilePath:  "/home/naota/document-manager/documents/file (cópia).pdf", // Adjust this path based on your actual implementation
-	}
-
-	directory, err := os.Getwd() //get the current directory using the built-in function
-	if err != nil {
-		fmt.Println(err) //print the error if obtained
-	}
-	Original_Path := strings.Split(directory, "document-manager")[0] + "document-manager/documents/file (cópia).pdf"
-	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + testDocumentID.String() + ".pdf"
-	e := os.Rename(Original_Path, filepath)
-	if e != nil {
-		log.Fatal(e)
-	}
-
-	testDocument.FilePath = filepath
-	// Save the test document to the database
-	err = db.Create(&testDocument).Error
-	assert.Nil(t, err)
+	// testDocumentID := uuid.New()
+	// testDocument := models.Document{
+	// 	ID:        idDocumentToDelete,
+	// 	Title:     "Test Document",
+	// 	OwnerID:   userId,
+	// 	OwnerName: userName,
+	// 	FilePath:  "/home/naota/document-manager/documents/file (cópia).pdf", // Adjust this path based on your actual implementation
+	// }
 
 	// Create a Gin router
 	r := gin.Default()
 	r.DELETE("/documents/:id", AuthMiddleware, DeleteDocumentHandler)
 
 	// Create a request to delete the test document
-	req, _ := http.NewRequest("DELETE", "/documents/"+testDocumentID.String(), nil)
+	req, _ := http.NewRequest("DELETE", "/documents/"+idDocumentToDelete, nil)
 	req.Header.Set("Authorization", accessToken)
 	// Create a response recorder
 	resp := httptest.NewRecorder()
@@ -209,10 +195,10 @@ func TestDeleteDocumentHandler(t *testing.T) {
 
 	// Check if the document is deleted from the database
 	var deletedDocument models.Document
-	err = db.Where("id = ?", testDocumentID).First(&deletedDocument).Error
+	err = db.Where("id = ?", idDocumentToDelete).First(&deletedDocument).Error
 	assert.NotNil(t, err) // This should return an error indicating that the document is not found
 
 	// Check if the file is deleted
-	_, fileErr := os.Stat(testDocument.FilePath)
+	_, fileErr := os.Stat(deletedDocument.FilePath)
 	assert.True(t, os.IsNotExist(fileErr)) // This should return true, indicating that the file is not found
 }
