@@ -27,6 +27,11 @@ func SetupRouter() *gin.Engine {
 	// documents
 	r.GET("/documents", handlers.AuthMiddleware, handlers.GetAllDocumentsHandler)
 	r.GET("/documents/:id", handlers.AuthMiddleware, handlers.GetDocumentByIDHandler)
+	r.GET("/documents/file/:id", handlers.AuthMiddleware, handlers.GetDocumentFileByIDHandler)
+	r.POST("/documents", handlers.AuthMiddleware, handlers.CreateDocumentHandler)
+	r.PUT("/documents/upload/:id", handlers.AuthMiddleware, handlers.UpdateDocumentHandler)
+	r.PUT("/documents/:id", handlers.AuthMiddleware, handlers.UpdateDocumentWithoutFileHandler)
+	r.DELETE("/documents/:id", handlers.AuthMiddleware, handlers.DeleteDocumentHandler)
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

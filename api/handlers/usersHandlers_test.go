@@ -5,7 +5,6 @@ import (
 	"document-manager/api/models"
 	"document-manager/database"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -36,6 +35,11 @@ func runInitDb() *gorm.DB {
 	if err != nil {
 		log.Fatal("Erro ao criar a tabela 'users':", err)
 	}
+	err = db.AutoMigrate(&models.Document{})
+	if err != nil {
+		log.Fatal("Erro ao criar a tabela 'documents':", err)
+	}
+
 	return db
 }
 
@@ -92,7 +96,7 @@ func createUserForTokenAcess() {
 		println("error on login user", err)
 		return
 	}
-	fmt.Println("login response =>", loginResponse)
+	// fmt.Println("login response =>", loginResponse)
 	// println("access token", loginResponse.AccessToken)
 	// println("refresh token", loginResponse.RefreshToken)
 	accessToken = loginResponse.AccessToken
@@ -132,8 +136,7 @@ func TestGetAllUsersHandler(t *testing.T) {
 	var response UsersResponse
 	err := json.Unmarshal(resp.Body.Bytes(), &response)
 	assert.Nil(t, err)
-	// fmt.Println("users => ", response.Users)
-	// fmt.Println(response)
+
 	usersLength := len(response.Users)
 	// usando zero no lugar do mínimo de usuários esperados no banco de dados.
 	assert.GreaterOrEqual(t, usersLength, 0, "The length of 'users' should be greater than or equal to 0")

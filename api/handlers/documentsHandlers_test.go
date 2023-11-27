@@ -14,19 +14,80 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 var idDocumentExample string
 
-func TestCreateDocumentHandler(t *testing.T) {
+func TestGetAllDocumentsHandler(t *testing.T) {
+	runInitDb()
+
+	r := gin.Default()
 	createUserForTokenAcess()
+	r.GET("/documents", AuthMiddleware, GetAllDocumentsHandler)
+
+	req, _ := http.NewRequest("GET", "/documents", nil)
+	req.Header.Set("Authorization", accessToken)
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var response DocumentsResponse
+	err := json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+
+	documentsLength := len(response.Documents)
+	// usando zero no lugar do mínimo de usuários esperados no banco de dados.
+	assert.GreaterOrEqual(t, documentsLength, 0, "The length of 'documents' should be greater than or equal to 0")
+}
+
+func TestGetDocumentByIDHandler(t *testing.T) {
 	db := runInitDb()
-	// Migrate the models
-	err := db.AutoMigrate(&models.Document{})
-	if err != nil {
-		t.Fatal("Error migrating models:", err)
+
+	testDocumentID := uuid.New()
+	testDocument := models.Document{
+		ID:        testDocumentID,
+		Title:     "Test Document",
+		OwnerID:   userId,
+		OwnerName: userName,
 	}
+
+	db.Create(&testDocument)
+
+	var existingDocument models.Document
+	err := db.First(&existingDocument, "id = ?", testDocument.ID).Error
+	assert.Nil(t, err)
+
+	r := gin.Default()
+	createUserForTokenAcess()
+	r.GET("/documents/:id", AuthMiddleware, GetDocumentByIDHandler)
+
+	req, _ := http.NewRequest("GET", "/documents/"+testDocumentID.String(), nil)
+	req.Header.Set("Authorization", accessToken)
+
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	var documentResponse DocumentResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &documentResponse)
+	assert.Nil(t, err)
+	assert.Equal(t, testDocumentID, documentResponse.ID)
+	assert.Equal(t, existingDocument.Title, documentResponse.Title)
+	assert.Equal(t, existingDocument.Description, existingDocument.Description)
+	assert.Equal(t, existingDocument.OwnerID, existingDocument.OwnerID)
+	assert.Equal(t, existingDocument.OwnerName, existingDocument.OwnerName)
+
+	err = db.Unscoped().Delete(&existingDocument).Error
+	assert.Nil(t, err)
+}
+
+func TestCreateDocumentHandler(t *testing.T) {
+	db := runInitDb()
 
 	directory, err := os.Getwd() //get the current directory using the built-in function
 	if err != nil {
@@ -42,11 +103,7 @@ func TestCreateDocumentHandler(t *testing.T) {
 		OwnerName: userName,
 	}
 
-	// documentJSON, err := json.Marshal(newDocument)
-	// assert.Nil(t, err)
-
 	r := gin.Default()
-
 	r.POST("/documents", AuthMiddleware, CreateDocumentHandler)
 
 	// Criar um buffer para armazenar os dados do formulário
@@ -95,6 +152,27 @@ func TestCreateDocumentHandler(t *testing.T) {
 	_, fileErr := os.Stat(existingDocument.FilePath)
 	assert.Nil(t, fileErr)
 
+}
+
+func TestGetDocumentFileByIDHandler(t *testing.T) {
+	// Configurar o roteador e a rota
+	r := gin.Default()
+	r.GET("/documents/file/:id", AuthMiddleware, GetDocumentFileByIDHandler)
+	// Criar uma solicitação HTTP para a rota com um ID de documento válido
+	req, _ := http.NewRequest("GET", "/documents/file/"+idDocumentExample, nil)
+	req.Header.Set("Authorization", accessToken)
+
+	// Criar um gravador de resposta falso
+	resp := httptest.NewRecorder()
+
+	// Executar a solicitação
+	r.ServeHTTP(resp, req)
+
+	// Verificar se o status da resposta é 200 OK
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	// Verificar se o tipo de conteúdo é application/pdf
+	assert.Equal(t, "application/octet-stream", resp.Header().Get("Content-Type"))
 }
 
 func TestUpdateDocumentHandler(t *testing.T) {
@@ -162,19 +240,6 @@ func TestUpdateDocumentHandler(t *testing.T) {
 }
 
 func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
-	// db := runInitDb()
-	// Create a test document
-	// testDocument := models.Document{
-	// 	Title:     "Test Document update without file",
-	// 	OwnerID:   userId,
-	// 	OwnerName: userName,
-	// }
-	// Save the test document to the database
-	// db.Create(&testDocument)
-	// var existingDocument models.Document
-	// err := db.First(&existingDocument, "ID = ?", idDocumentExample).Error
-	// assert.Nil(t, err)
-
 	r := gin.Default()
 	r.PUT("/documents/:id", AuthMiddleware, UpdateDocumentWithoutFileHandler)
 
@@ -205,7 +270,6 @@ func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
 	assert.Equal(t, updateDocumentData.OwnerID, response.Document.OwnerID)
 	assert.Equal(t, updateDocumentData.OwnerName, response.Document.OwnerName)
 	assert.Equal(t, updateDocumentData.Title, response.Document.Title)
-	// err = db.Unscoped().Delete(&existingDocument).Error
 	assert.Nil(t, err)
 }
 

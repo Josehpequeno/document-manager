@@ -138,6 +138,80 @@ func GetDocumentByIDHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, existingDocument)
 }
 
+// GetDocumentFileByIDHandler gets a document by ID.
+// @Summary Get a document file by ID
+// @Description Get a document file by ID
+// @ID get-document-file-by-id
+// @Tags Documents
+// @Accept json
+// @Produce binary
+// @Param id path string true "Document ID"
+// @Success 200 {file} application/pdf
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security Bearer
+// @Router /documents/file/{id} [get]
+func GetDocumentFileByIDHandler(c *gin.Context) {
+	documentIDStr := c.Param("id")
+	documentID, err := uuid.Parse(documentIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
+		return
+	}
+
+	db := database.GetDB()
+
+	var existingDocument models.Document
+	if err := db.Where("id = ?", documentID).First(&existingDocument).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		return
+	}
+
+	// Verifique se o arquivo existe
+	_, err = os.Stat(existingDocument.FilePath)
+	if os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// Abra o arquivo para leitura
+	file, err := os.Open(existingDocument.FilePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error opening file"})
+		return
+	}
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting file info"})
+		return
+	}
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", existingDocument.FilePath))
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Length", fmt.Sprintf("%d", fileInfo.Size()))
+
+	c.File(existingDocument.FilePath)
+
+	// Definir os cabeçalhos necessários para indicar que é um arquivo PDF
+	// c.Header("Content-Description", "File Transfer")
+	// c.Header("Content-Disposition", "inline; filename="+documentID.String()+".pdf")
+	// c.Header("Content-Type", "application/pdf")
+	// c.Header("Content-Transfer-Encoding", "binary")
+	// c.Header("Expires", "0")
+	// c.Header("Cache-Control", "must-revalidate")
+	// c.Header("Pragma", "public")
+
+	// Copiar o conteúdo do arquivo para o corpo da resposta
+	// http.ServeContent(c.Writer, c.Request, documentID.String()+".pdf", fileInfo.ModTime(), file)
+
+}
+
 // CreateDocumentHandler creates a new document.
 // @Summary Create a new document
 // @Description Create a new document
