@@ -159,7 +159,6 @@ func CreateDocumentHandler(c *gin.Context) {
 
 	var docRequest DocumentRequest
 	if err := c.Bind(&docRequest); err != nil {
-		fmt.Println("create data: ", docRequest)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
 		return
 	}
@@ -202,7 +201,14 @@ func CreateDocumentHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, newDocument)
+	documentResponse := DocumentResponse{
+		ID:        newDocument.ID,
+		Title:     newDocument.Title,
+		OwnerID:   newDocument.OwnerID,
+		OwnerName: newDocument.OwnerName,
+	}
+
+	c.JSON(http.StatusCreated, documentResponse)
 }
 
 // UploadDocumentHandler uploads a document with a file.
@@ -213,7 +219,7 @@ func CreateDocumentHandler(c *gin.Context) {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "Document file"
-// @Success 200 {object} DocumentResponse
+// @Success 200 {object} MessageWithDocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /documents/upload/{id} [put]
@@ -237,6 +243,30 @@ func UpdateDocumentHandler(c *gin.Context) {
 		return
 	}
 
+	db := database.GetDB()
+
+	var existingDocument models.Document
+
+	// Verificar se o documento existe
+	if err := db.First(&existingDocument, "id = ?", documentID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Documento não encontrado"})
+		return
+	}
+
+	if docRequest.Title != "" {
+		existingDocument.Title = docRequest.Title
+	}
+	if docRequest.Description != "" {
+		existingDocument.Description = docRequest.Description
+	}
+	if docRequest.OwnerID != "" {
+		existingDocument.OwnerID = docRequest.OwnerID
+	}
+	if docRequest.OwnerName != "" {
+		existingDocument.OwnerName = docRequest.OwnerName
+	}
+
+	// file, header, err := c.Request.FormFile("file")
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
@@ -244,39 +274,38 @@ func UpdateDocumentHandler(c *gin.Context) {
 	}
 	defer file.Close()
 
-	filename := header.Filename
+	// filename := header.Filename
 
-	db := database.GetDB()
-	document := models.Document{
-		ID:          documentID,
-		Title:       docRequest.Title,
-		Description: docRequest.Description,
-		OwnerID:     docRequest.OwnerID,
-		OwnerName:   docRequest.OwnerName,
-		FilePath:    "./documents/" + filename,
-	}
+	// directory, err := os.Getwd() //get the current directory using the built-in function
+	// if err != nil {
+	// 	fmt.Println(err) //print the error if obtained
+	// }
+	// filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentIDStr + ".pdf"
 
-	directory, err := os.Getwd() //get the current directory using the built-in function
-	if err != nil {
-		fmt.Println(err) //print the error if obtained
-	}
-	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentID.String() + ".pdf"
-	document.FilePath = filepath
-
-	if err := db.Save(&document).Error; err != nil {
+	// if err := os.Remove(filepath); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document file", "details": err.Error()})
+	// 	return
+	// }
+	if err := db.Save(&existingDocument).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document information"})
 		return
 	}
 
-	response := DocumentResponse{
-		ID:        document.ID,
-		Title:     document.Title,
-		OwnerID:   document.OwnerID,
-		OwnerName: document.OwnerName,
+	err = c.SaveUploadedFile(header, existingDocument.FilePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file", "details": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	documentResponse := DocumentResponse{
+		ID:          existingDocument.ID,
+		Title:       existingDocument.Title,
+		Description: existingDocument.Description,
+		OwnerID:     existingDocument.OwnerID,
+		OwnerName:   existingDocument.OwnerName,
+	}
 
+	c.JSON(http.StatusOK, gin.H{"message": "Document updated successfully", "document": documentResponse})
 }
 
 // UploadDocumentWithoutFileHandler uploads a document without a file.
@@ -304,25 +333,39 @@ func UpdateDocumentWithoutFileHandler(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	document := models.Document{
-		ID:          documentID,
-		Title:       docRequest.Title,
-		Description: docRequest.Description,
-		OwnerID:     docRequest.OwnerID,
-		OwnerName:   docRequest.OwnerName,
+
+	var existingDocument models.Document
+
+	// Verificar se o documento existe
+	if err := db.First(&existingDocument, "id = ?", documentID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		return
 	}
 
-	if err := db.Save(&document).Error; err != nil {
+	if docRequest.Title != "" {
+		existingDocument.Title = docRequest.Title
+	}
+	if docRequest.Description != "" {
+		existingDocument.Description = docRequest.Description
+	}
+	if docRequest.OwnerID != "" {
+		existingDocument.OwnerID = docRequest.OwnerID
+	}
+	if docRequest.OwnerName != "" {
+		existingDocument.OwnerName = docRequest.OwnerName
+	}
+
+	if err := db.Save(&existingDocument).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document information"})
 		return
 	}
 
 	documentResponse := DocumentResponse{
-		ID:          document.ID,
-		Title:       document.Title,
-		Description: document.Description,
-		OwnerID:     document.OwnerID,
-		OwnerName:   document.OwnerName,
+		ID:          existingDocument.ID,
+		Title:       existingDocument.Title,
+		Description: existingDocument.Description,
+		OwnerID:     existingDocument.OwnerID,
+		OwnerName:   existingDocument.OwnerName,
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Document updated successfully", "document": documentResponse})

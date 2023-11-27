@@ -14,15 +14,19 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-var idDocumentToDelete string
+var idDocumentExample string
 
 func TestCreateDocumentHandler(t *testing.T) {
 	createUserForTokenAcess()
 	db := runInitDb()
+	// Migrate the models
+	err := db.AutoMigrate(&models.Document{})
+	if err != nil {
+		t.Fatal("Error migrating models:", err)
+	}
 
 	directory, err := os.Getwd() //get the current directory using the built-in function
 	if err != nil {
@@ -82,7 +86,7 @@ func TestCreateDocumentHandler(t *testing.T) {
 	var response DocumentResponse
 	err = json.Unmarshal(resp.Body.Bytes(), &response)
 	assert.Nil(t, err)
-	idDocumentToDelete = response.ID.String()
+	idDocumentExample = response.ID.String()
 
 	var existingDocument models.Document
 	err = db.Where("id = ?", response.ID).First(&existingDocument).Error
@@ -91,47 +95,99 @@ func TestCreateDocumentHandler(t *testing.T) {
 	_, fileErr := os.Stat(existingDocument.FilePath)
 	assert.Nil(t, fileErr)
 
-	// _ = os.Remove(newDocument.FilePath)
 }
 
-// func TestUpdateDocumentHandler(t *testing.T) {
-
-// }
-
-func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
+func TestUpdateDocumentHandler(t *testing.T) {
 	db := runInitDb()
-	// Migrate the models
-	err := db.AutoMigrate(&models.Document{})
+	directory, err := os.Getwd() //get the current directory using the built-in function
 	if err != nil {
-		t.Fatal("Error migrating models:", err)
+		fmt.Println(err) //print the error if obtained
 	}
-	// Create a test document
-	testDocumentID := uuid.New()
-	testDocument := models.Document{
-		ID:        testDocumentID,
-		Title:     "Test Document",
+	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + "file.pdf"
+
+	newDocument := models.Document{
+		Title:     "Test Document update",
 		OwnerID:   userId,
 		OwnerName: userName,
 	}
-	// Save the test document to the database
-	db.Create(&testDocument)
-	var existingDocument models.Document
-	err = db.First(&existingDocument, "ID = ?", testDocument.ID).Error
+
+	r := gin.Default()
+
+	r.PUT("/documents/upload/:id", AuthMiddleware, UpdateDocumentHandler)
+
+	// Criar um buffer para armazenar os dados do formulário
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+
+	// Adicionar o JSON como um campo do formulário
+	err = writer.WriteField("Title", newDocument.Title)
 	assert.Nil(t, err)
+	err = writer.WriteField("OwnerId", newDocument.OwnerID)
+	assert.Nil(t, err)
+	err = writer.WriteField("OwnerName", newDocument.OwnerName)
+	assert.Nil(t, err)
+	// Abrir o arquivo PDF
+	file, err := os.Open(filepath)
+	assert.Nil(t, err)
+	defer file.Close()
+
+	// Adicionar o arquivo PDF como um campo do formulário
+	part, err := writer.CreateFormFile("file", "file.pdf")
+	assert.Nil(t, err)
+	_, err = io.Copy(part, file)
+	assert.Nil(t, err)
+
+	// Finalizar o formulário
+	writer.Close()
+	req, _ := http.NewRequest("PUT", "/documents/upload/"+idDocumentExample, &b)
+	req.Header.Set("Authorization", accessToken)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+	var response MessageWithDocumentResponse
+	err = json.Unmarshal(resp.Body.Bytes(), &response)
+	assert.Nil(t, err)
+
+	var existingDocument models.Document
+	err = db.Where("id = ?", response.Document.ID).First(&existingDocument).Error
+	assert.Nil(t, err)
+
+	_, fileErr := os.Stat(existingDocument.FilePath)
+	assert.Nil(t, fileErr)
+}
+
+func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
+	// db := runInitDb()
+	// Create a test document
+	// testDocument := models.Document{
+	// 	Title:     "Test Document update without file",
+	// 	OwnerID:   userId,
+	// 	OwnerName: userName,
+	// }
+	// Save the test document to the database
+	// db.Create(&testDocument)
+	// var existingDocument models.Document
+	// err := db.First(&existingDocument, "ID = ?", idDocumentExample).Error
+	// assert.Nil(t, err)
 
 	r := gin.Default()
 	r.PUT("/documents/:id", AuthMiddleware, UpdateDocumentWithoutFileHandler)
 
 	updateDocumentData := DocumentRequest{
-		Title:       "Test Document update",
-		Description: "Test Document update description",
+		Title:       "Test Document update without file",
+		Description: "Test Document update without file description",
 		OwnerID:     userId,
 		OwnerName:   userName,
 	}
 	reqBody, err := json.Marshal(updateDocumentData)
 	assert.Nil(t, err)
 
-	req, _ := http.NewRequest("PUT", "/documents/"+testDocumentID.String(), bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest("PUT", "/documents/"+idDocumentExample, bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", accessToken)
 
@@ -144,12 +200,12 @@ func TestUpdateDocumentWithoutFileHandler(t *testing.T) {
 	err = json.Unmarshal(resp.Body.Bytes(), &response)
 	assert.Nil(t, err)
 	assert.Equal(t, "Document updated successfully", response.Message)
-	assert.Equal(t, testDocumentID, response.Document.ID)
+	assert.Equal(t, idDocumentExample, response.Document.ID.String())
 	assert.Equal(t, updateDocumentData.Description, response.Document.Description)
 	assert.Equal(t, updateDocumentData.OwnerID, response.Document.OwnerID)
 	assert.Equal(t, updateDocumentData.OwnerName, response.Document.OwnerName)
 	assert.Equal(t, updateDocumentData.Title, response.Document.Title)
-	err = db.Unscoped().Delete(&existingDocument).Error
+	// err = db.Unscoped().Delete(&existingDocument).Error
 	assert.Nil(t, err)
 }
 
@@ -161,22 +217,12 @@ func TestDeleteDocumentHandler(t *testing.T) {
 		t.Fatal("Error migrating models:", err)
 	}
 
-	// Create a test document
-	// testDocumentID := uuid.New()
-	// testDocument := models.Document{
-	// 	ID:        idDocumentToDelete,
-	// 	Title:     "Test Document",
-	// 	OwnerID:   userId,
-	// 	OwnerName: userName,
-	// 	FilePath:  "/home/naota/document-manager/documents/file (cópia).pdf", // Adjust this path based on your actual implementation
-	// }
-
 	// Create a Gin router
 	r := gin.Default()
 	r.DELETE("/documents/:id", AuthMiddleware, DeleteDocumentHandler)
 
 	// Create a request to delete the test document
-	req, _ := http.NewRequest("DELETE", "/documents/"+idDocumentToDelete, nil)
+	req, _ := http.NewRequest("DELETE", "/documents/"+idDocumentExample, nil)
 	req.Header.Set("Authorization", accessToken)
 	// Create a response recorder
 	resp := httptest.NewRecorder()
@@ -195,7 +241,7 @@ func TestDeleteDocumentHandler(t *testing.T) {
 
 	// Check if the document is deleted from the database
 	var deletedDocument models.Document
-	err = db.Where("id = ?", idDocumentToDelete).First(&deletedDocument).Error
+	err = db.Where("id = ?", idDocumentExample).First(&deletedDocument).Error
 	assert.NotNil(t, err) // This should return an error indicating that the document is not found
 
 	// Check if the file is deleted
