@@ -2,6 +2,8 @@ basePath: /
 definitions:
   handlers.DocumentResponse:
     properties:
+      description:
+        type: string
       id:
         type: string
       owner_id:
@@ -43,6 +45,13 @@ definitions:
     type: object
   handlers.MessageResponse:
     properties:
+      message:
+        type: string
+    type: object
+  handlers.MessageWithDocumentResponse:
+    properties:
+      document:
+        $ref: '#/definitions/handlers.DocumentResponse'
       message:
         type: string
     type: object
@@ -282,7 +291,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.DocumentResponse'
+            $ref: '#/definitions/handlers.MessageWithDocumentResponse'
         "400":
           description: Bad Request
           schema:
@@ -292,6 +301,46 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
       summary: Upload a document without a file
+      tags:
+      - Documents
+  /documents/file/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a document file by ID
+      operationId: get-document-file-by-id
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get a document file by ID
       tags:
       - Documents
   /documents/upload/{id}:
@@ -312,7 +361,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.DocumentResponse'
+            $ref: '#/definitions/handlers.MessageWithDocumentResponse'
         "400":
           description: Bad Request
           schema:

@@ -167,6 +167,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/documents/file/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get a document file by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Get a document file by ID",
+                "operationId": "get-document-file-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Document ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/documents/upload/{id}": {
             "put": {
                 "description": "Upload a document with a file",
@@ -194,7 +256,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.DocumentResponse"
+                            "$ref": "#/definitions/handlers.MessageWithDocumentResponse"
                         }
                     },
                     "400": {
@@ -287,7 +349,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.DocumentResponse"
+                            "$ref": "#/definitions/handlers.MessageWithDocumentResponse"
                         }
                     },
                     "400": {
@@ -811,6 +873,9 @@ const docTemplate = `{
         "handlers.DocumentResponse": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -875,6 +940,17 @@ const docTemplate = `{
         "handlers.MessageResponse": {
             "type": "object",
             "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.MessageWithDocumentResponse": {
+            "type": "object",
+            "properties": {
+                "document": {
+                    "$ref": "#/definitions/handlers.DocumentResponse"
+                },
                 "message": {
                     "type": "string"
                 }

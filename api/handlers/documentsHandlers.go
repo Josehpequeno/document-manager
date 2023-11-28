@@ -144,7 +144,7 @@ func GetDocumentByIDHandler(c *gin.Context) {
 // @ID get-document-file-by-id
 // @Tags Documents
 // @Accept json
-// @Produce binary
+// @Produce octet-stream
 // @Param id path string true "Document ID"
 // @Success 200 {file} application/pdf
 // @Failure 400 {object} ErrorResponse
