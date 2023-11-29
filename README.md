@@ -2,7 +2,14 @@
 
 go api para gerenciar documentos
 
-### Iniciando Banco de dados postgres
+## Clone o Repositório
+
+```powershell-interactive
+git clone https://github.com/Josehpequeno/document-manager.git
+cd seu-repositorio
+```
+
+## Iniciando Banco de dados postgres
 
 Entrando na pasta de banco de dados
 
@@ -24,14 +31,15 @@ Se os containers estiverem parados rode o comando abaixo:
 
 Postgres vai está rodando na porta 5432 e o pgadmin na 8080 de acordo com as credenciais no arquivo de docker-compose.yml
 
-# Iniciar variáveis de ambiente
+## Iniciar variáveis de ambiente
 
 ```shell
 chmod +x .initENV.sh &&
 source .initENV.sh
 ```
 
-# Gerar doc swagger
+## Gerar doc swagger
+
 ### Instalar swag
 
 ```shell
@@ -43,14 +51,22 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ```shell
 swag init --parseDependency --parseInternal
 ```
+
 ### Rota swag
+
 /swagger/index.html
 
-# Testes
+## Testes
 
 Testar handlers
 
 ```
-cd api/handlers/ && 
+cd api/handlers/ &&
 GIN_MODE=release go test
+```
+
+## Executar ultima versão com docker-compose
+
+```shell
+cd docker && docker-compose up -d
 ```
