@@ -9,18 +9,10 @@ git clone https://github.com/Josehpequeno/document-manager.git
 cd seu-repositorio
 ```
 
-## Iniciando Banco de dados postgres
-
-Entrando na pasta de banco de dados
+## Executar ultima versão com docker-compose
 
 ```shell
-  cd docker
-```
-
-Cria a instância do postgres e pgadmin. Só precisa rodar o comando uma vez.
-
-```shell
- docker-compose up -d
+ cd docker && docker-compose up -d
 ```
 
 Se os containers estiverem parados rode o comando abaixo:
@@ -29,7 +21,7 @@ Se os containers estiverem parados rode o comando abaixo:
   docker-compose start
 ```
 
-Postgres vai está rodando na porta 5432 e o pgadmin na 8080 de acordo com as credenciais no arquivo de docker-compose.yml
+Postgres vai está rodando na porta 5432, pgadmin na porta 8080 e a aplicação na porta 3450 de acordo com as credenciais no arquivo de docker-compose.yml
 
 ## Iniciar variáveis de ambiente
 
@@ -63,10 +55,4 @@ Testar handlers
 ```
 cd api/handlers/ &&
 GIN_MODE=release go test
-```
-
-## Executar ultima versão com docker-compose
-
-```shell
-cd docker && docker-compose up -d
 ```
