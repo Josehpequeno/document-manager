@@ -6,7 +6,7 @@ go api para gerenciar documentos
 
 ```powershell-interactive
 git clone https://github.com/Josehpequeno/document-manager.git
-cd seu-repositorio
+cd document-manager
 ```
 
 ## Executar ultima versão com docker-compose
