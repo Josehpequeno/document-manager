@@ -2,6 +2,7 @@ package database
 
 import (
 	"document-manager/api/models"
+	"log"
 	"os"
 
 	"github.com/google/uuid"
@@ -66,6 +67,11 @@ func getDSNFromEnv() string {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
+
+	// Adicione verificações para garantir que os valores não estejam vazios
+	if dbHost == "" || dbPort == "" || dbUser == "" || dbPassword == "" || dbName == "" {
+		log.Fatal("Alguma variável de ambiente do banco de dados está ausente ou vazia.")
+	}
 
 	return "host=" + dbHost + " user=" + dbUser + " password=" + dbPassword + " dbname=" + dbName + " port=" + dbPort + " sslmode=disable TimeZone=America/Fortaleza"
 }

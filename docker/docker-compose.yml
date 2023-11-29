@@ -23,3 +23,9 @@ services:
       - "443"
     depends_on:
       - postgres
+  documentmanager:
+    image: josehpequeno/document-manager
+    ports:
+      - "3450:3450"
+    depends_on:
+      - postgres
