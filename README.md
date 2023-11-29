@@ -9,7 +9,7 @@ git clone https://github.com/Josehpequeno/document-manager.git
 cd document-manager
 ```
 
-## Executar ultima versão com docker-compose
+## Executar última versão com docker-compose
 
 ```shell
  cd docker && docker-compose up -d
