@@ -430,6 +430,17 @@ const docTemplate = `{
                 ],
                 "summary": "Login",
                 "operationId": "login",
+                "parameters": [
+                    {
+                        "description": "User object",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.LoginBody"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -554,7 +565,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserBody"
+                            "$ref": "#/definitions/handlers.UserBodyWithoutID"
                         }
                     }
                 ],
@@ -673,7 +684,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserBodyUpdate"
+                            "$ref": "#/definitions/handlers.UserBodyWithoutID"
                         }
                     }
                 ],
@@ -786,7 +797,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserBody"
+                            "$ref": "#/definitions/handlers.UserBodyWithoutID"
                         }
                     }
                 ],
@@ -920,6 +931,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.LoginBody": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username_or_email": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.LoginResponse": {
             "type": "object",
             "properties": {
@@ -967,24 +989,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UserBody": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.UserBodyUpdate": {
+        "handlers.UserBodyWithoutID": {
             "type": "object",
             "properties": {
                 "email": {

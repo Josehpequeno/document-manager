@@ -46,7 +46,7 @@ type UserBody struct {
 	Password string    `json:"password"`
 }
 
-type UserBodyUpdate struct {
+type UserBodyWithoutID struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -164,7 +164,7 @@ func GetUserByIDHandler(c *gin.Context) {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param user body UserBody true "User object"
+// @Param user body UserBodyWithoutID true "User object"
 // @Success 201 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponseWithDetails
@@ -205,7 +205,7 @@ func CreateUserHandler(c *gin.Context) {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param user body UserBody true "User object"
+// @Param user body UserBodyWithoutID true "User object"
 // @Success 201 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponseWithDetails
@@ -248,7 +248,7 @@ func CreateUserMasterHandler(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
-// @Param user body UserBodyUpdate true "User object"
+// @Param user body UserBodyWithoutID true "User object"
 // @Success 200 {object} MessageWithUserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse

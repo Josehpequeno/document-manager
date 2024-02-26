@@ -32,6 +32,13 @@ definitions:
       error:
         type: string
     type: object
+  handlers.LoginBody:
+    properties:
+      password:
+        type: string
+      username_or_email:
+        type: string
+    type: object
   handlers.LoginResponse:
     properties:
       access_token:
@@ -62,18 +69,7 @@ definitions:
       user:
         $ref: '#/definitions/handlers.UserResponse'
     type: object
-  handlers.UserBody:
-    properties:
-      email:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  handlers.UserBodyUpdate:
+  handlers.UserBodyWithoutID:
     properties:
       email:
         type: string
@@ -379,6 +375,13 @@ paths:
       - application/json
       description: login of users
       operationId: login
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginBody'
       produces:
       - application/json
       responses:
@@ -463,7 +466,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.UserBody'
+          $ref: '#/definitions/handlers.UserBodyWithoutID'
       produces:
       - application/json
       responses:
@@ -573,7 +576,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.UserBodyUpdate'
+          $ref: '#/definitions/handlers.UserBodyWithoutID'
       produces:
       - application/json
       responses:
@@ -614,7 +617,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.UserBody'
+          $ref: '#/definitions/handlers.UserBodyWithoutID'
       produces:
       - application/json
       responses:

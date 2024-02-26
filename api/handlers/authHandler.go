@@ -78,6 +78,7 @@ func generateTokens(userID uuid.UUID, isMaster bool) (string, string, error) {
 // @Tags Auth
 // @Accept json
 // @Produce json
+// @Param user body LoginBody true "User object"
 //
 //	@Success 200 {object} LoginResponse
 //
