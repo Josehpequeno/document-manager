@@ -24,8 +24,18 @@ VOLUME /var/lib/postgresql/data
 # Copie o binário do primeiro estágio
 COPY --from=builder /app/main /app/main
 
-# Expor a porta necessária pelo seu aplicativo
-EXPOSE 3450
+# Copie os arquivos da aplicação React
+COPY docbeaver /app/docbeaver
+
+# Instale o Node.js e npm
+RUN apt-get update && apt-get install -y nodejs npm
+
+# Instale as dependências e construa a aplicação React
+WORKDIR /app/docbeaver
+RUN npm install && npm run build
+
+# Exponha a porta necessária pelo seu aplicativo React
+EXPOSE 3000
 
 # Defina as variáveis de ambiente
 ENV DB_HOST=localhost
@@ -40,8 +50,6 @@ ENV API_SECRET=tESTEsecret
 RUN service postgresql start && \
     su postgres -c 'createdb documentmanager' && \
     su - postgres -c "psql -U postgres -c \"ALTER USER postgres WITH PASSWORD 'postgres';\""
-
-
 
 # Copiar o script de inicialização
 COPY start.sh /app/start.sh
