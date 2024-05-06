@@ -5,6 +5,7 @@ import (
 	"document-manager/database"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -191,6 +192,14 @@ func CreateUserHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	if err := db.Create(&newUser).Error; err != nil {
+		if strings.Contains(err.Error(), "name") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Error creating user. Name already in use", "details": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "email") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Error creating user. Email already in use", "details": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
 		return
 	}

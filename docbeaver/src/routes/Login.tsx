@@ -2,23 +2,42 @@
 
 import React, { useState } from "react";
 import logo from "../logo.png";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import axios from "axios";
+import { apiUrl } from "../utils/config";
 
-const Login: React.FC = () => {
-  const [emailOrUsername, setEmailOrUsername] = useState("");
+export default function Login() {
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(null);
+  
 
   const handleShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você pode adicionar a lógica para lidar com o envio do formulário
-    console.log("Email/Username:", emailOrUsername);
-    console.log("Password:", password);
+    try {
+      const response = await axios.post(`${apiUrl}/login`, {
+        password,
+        username_or_email: usernameOrEmail
+      });
+      setUser(response.data.user);
+      setRefreshToken(response.data.refresh_token);
+      setAccessToken(response.data.access_token);
+    } catch (error) {
+      setError("Invalid username/email or password");
+    }
   };
+
+  if (user) {
+    return <Navigate to="/" replace={true} />;
+  }
 
   return (
     <div className="App-header h-screen">
@@ -32,7 +51,7 @@ const Login: React.FC = () => {
         <div className="mb-4 mt-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="emailOrUsername"
+            htmlFor="usernameOrEmail"
           >
             Email/Username:
           </label>
@@ -40,10 +59,10 @@ const Login: React.FC = () => {
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             type="text"
-            id="emailOrUsername"
-            value={emailOrUsername}
+            id="usernameOrEmail"
+            value={usernameOrEmail}
             placeholder="Username or Email"
-            onChange={(e) => setEmailOrUsername(e.target.value)}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
           />
         </div>
         <div className="mb-6">
@@ -92,9 +111,16 @@ const Login: React.FC = () => {
             Create one here
           </Link>
         </div>
+        {error && (
+          <div
+            className="text-xs md:text-sm flex gap-1 justify-center bg-red-100 border border-red-400 text-red-700 px-2 py-2 rounded relative mt-4"
+            role="alert"
+          >
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
       </form>
     </div>
   );
-};
-
-export default Login;
+}

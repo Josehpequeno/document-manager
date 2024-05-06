@@ -1,45 +1,59 @@
 import React, { useState } from "react";
 import logo from "../logo.png";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { apiUrl } from "../utils/config";
 
-const Signup: React.FC = () => {
+export default function Signup() {
   const [email, setEmail] = useState("");
   const [emailValid, setEmailValid] = useState(true);
-  const [username, setUsername] = useState("");
-  const [usernameValid, setUsernameValid] = useState(true);
+  const [name, setName] = useState("");
+  const [nameValid, setNameValid] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [passwordsMatch, setPasswordsMatch] = useState(true);
-  const [passwordNotEmpty, setPasswordNotEmpty] = useState(true);
+  const [passwordIsEmpty, setPasswordIsEmpty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [requestSuccess, setRequestSuccess] = useState<Boolean | undefined>(
+    undefined
+  );
 
   const handleShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Verificar se o email é válido
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setEmailValid(emailPattern.test(email));
+    const emailValidate = emailPattern.test(email);
+    const nameValidate = name.length >= 4;
+    const passwordIsEmptyValidate = password.trim() === "";
+    const passwordsMatchValidate = password === confirmPassword;
+    setEmailValid(emailValidate);
+    setNameValid(nameValidate);
+    setPasswordIsEmpty(passwordIsEmptyValidate);
+    setPasswordsMatch(passwordsMatchValidate);
 
-    // Verificar se o username tem pelo menos 4 caracteres
-    setUsernameValid(username.length >= 4);
-
-    // Verificar se a senha não está vazia
-    setPasswordNotEmpty(password.trim() !== "");
-
-    // Verificar se as senhas correspondem
-    setPasswordsMatch(password === confirmPassword);
-
-    // Se todos os campos forem válidos, continue com o envio do formulário
-    if (emailValid && usernameValid && passwordsMatch) {
-      // Lógica para lidar com o envio do formulário
-      console.log("Email:", email);
-      console.log("Username:", username);
-      console.log("Password:", password);
-      console.log("Confirm Password:", confirmPassword);
+    if (
+      emailValidate &&
+      nameValidate &&
+      !passwordIsEmptyValidate &&
+      passwordsMatchValidate
+    ) {
+      try {
+        await axios.post(`${apiUrl}/users`, {
+          email,
+          name,
+          password
+        });
+        setRequestSuccess(true);
+        setError(null);
+      } catch (error: any) {
+        setError(error.response.data.error);
+        setRequestSuccess(false);
+      }
     }
   };
 
@@ -82,27 +96,27 @@ const Signup: React.FC = () => {
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="username"
+            htmlFor="name"
           >
-            Username:
+            name:
           </label>
 
           <input
             className={`shadow appearance-none border ${
-              usernameValid ? "" : "border-red-500"
+              nameValid ? "" : "border-red-500"
             } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
             type="text"
-            id="username"
-            value={username}
-            placeholder="Username"
+            id="name"
+            value={name}
+            placeholder="name"
             onChange={(e) => {
-              setUsernameValid(true);
-              setUsername(e.target.value);
+              setNameValid(true);
+              setName(e.target.value);
             }}
           />
-          {!usernameValid && (
+          {!nameValid && (
             <p className="text-red-500 text-xs italic">
-              Username must be at least 4 characters long.
+              name must be at least 4 characters long.
             </p>
           )}
         </div>
@@ -124,7 +138,7 @@ const Signup: React.FC = () => {
             placeholder="Password"
             onChange={(e) => setPassword(e.target.value)}
           />
-          {!passwordNotEmpty && (
+          {passwordIsEmpty && (
             <p className="text-red-500 text-xs italic">
               Please enter a password.
             </p>
@@ -151,10 +165,12 @@ const Signup: React.FC = () => {
               setPasswordsMatch(password === e.target.value);
             }}
           />
+          {!passwordsMatch && (
+            <p className="text-red-500 text-xs italic">
+              Passwords do not match.
+            </p>
+          )}
         </div>
-        {!passwordsMatch && (
-          <p className="text-red-500 text-xs italic">Passwords do not match.</p>
-        )}
         <div className="md:flex md:items-center mb-6">
           <div className="md:w-1/3"></div>
           <label className="md:w-2/3 block text-gray-500 font-bold">
@@ -172,7 +188,7 @@ const Signup: React.FC = () => {
           <button
             className="bg-slate-900 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             type="submit"
-            disabled={!emailValid || !usernameValid || !passwordsMatch} // Desabilita o botão de envio se algum dos campos não for válido
+            disabled={!emailValid || !nameValid || !passwordsMatch} // Desabilita o botão de envio se algum dos campos não for válido
           >
             Signup
           </button>
@@ -184,9 +200,28 @@ const Signup: React.FC = () => {
             Log in here
           </Link>
         </div>
+        {error && (
+          <div
+            className="text-xs md:text-sm flex gap-1 justify-center bg-red-100 border border-red-400 text-red-700 px-2 py-2 rounded relative mt-4"
+            role="alert"
+          >
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
+        {requestSuccess && (
+          <div
+            className="text-xs md:text-sm flex gap-1 justify-center bg-green-100 border border-green-400 text-green-700 px-2 py-2 rounded relative mt-4"
+            role="alert"
+          >
+            <strong className="font-bold">Success</strong>
+            <span className="block sm:inline">
+              {" "}
+              User {name} created with success
+            </span>
+          </div>
+        )}
       </form>
     </div>
   );
-};
-
-export default Signup;
+}
