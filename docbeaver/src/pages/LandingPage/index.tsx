@@ -1,9 +1,7 @@
-// src/components/Home.tsx
-
 import { Link } from "react-router-dom";
-import logo from "../logo.png";
+import logo from "../../logo.png";
 
-export default function Home() {
+export default function LandingPage() {
   return (
     <div className="App">
       <header className="App-header">

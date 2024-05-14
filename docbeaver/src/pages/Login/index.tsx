@@ -1,20 +1,18 @@
-// src/components/Login.tsx
-
 import React, { useState } from "react";
-import logo from "../logo.png";
+import logo from "../../logo.png";
 import { Link, Navigate } from "react-router-dom";
 import axios from "axios";
-import { apiUrl } from "../utils/config";
+import { apiUrl } from "../../utils/config";
+import { useAppDispatch, useAppSelector } from "../../store/store";
+import { setUser } from "../../store/userSlice";
 
 export default function Login() {
+  const dispatch = useAppDispatch();
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
-  const [refreshToken, setRefreshToken] = useState(null);
-  
+  const user = useAppSelector((state) => state.userState.user);
 
   const handleShowPassword = () => {
     setShowPassword(!showPassword);
@@ -27,16 +25,23 @@ export default function Login() {
         password,
         username_or_email: usernameOrEmail
       });
-      setUser(response.data.user);
-      setRefreshToken(response.data.refresh_token);
-      setAccessToken(response.data.access_token);
+      dispatch(
+        setUser({
+          accessToken: response.data.access_token,
+          refreshToken: response.data.refresh_token,
+          name: response.data.user.Name,
+          master: response.data.user.Master,
+          id: response.data.user.ID,
+          email: response.data.user.Email
+        })
+      );
     } catch (error) {
       setError("Invalid username/email or password");
     }
   };
 
   if (user) {
-    return <Navigate to="/" replace={true} />;
+    return <Navigate to="/home" replace={true} />;
   }
 
   return (

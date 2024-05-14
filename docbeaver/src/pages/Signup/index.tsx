@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import logo from "../logo.png";
+import logo from "../../logo.png";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { apiUrl } from "../utils/config";
+import { apiUrl } from "../../utils/config";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
