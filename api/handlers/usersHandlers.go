@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -34,10 +35,14 @@ type UsersResponse struct {
 	Users []UserResponse `json:"users"`
 }
 type UserResponse struct {
-	ID     uuid.UUID `json:"id"`
-	Name   string    `json:"name"`
-	Email  string    `json:"email"`
-	Master bool      `json:"master"`
+	ID        uuid.UUID  `json:"id"`
+	Name      string     `json:"name"`
+	Email     string     `json:"email"`
+	Master    bool       `json:"master"`
+	Password  string     `json:"password"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
 }
 
 type UserBody struct {
@@ -52,6 +57,12 @@ type UserBodyWithoutID struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+var messageStatusNotFound = "User not found"
+var messageStatusBadRequest = "Invalid data"
+var errorCreatingUser = "Error creating user"
+var errorDeletingUser = "Error deleting user"
+var searchById = "id = ?"
 
 // GetAllUsersHandler gets all users.
 // @Summary Get all users
@@ -115,7 +126,7 @@ func GetAllUsersHandler(c *gin.Context) {
 
 	//query the database with pagination and sorting
 	query := db.Offset(startInt).Limit(limitInt).Order(sortField + " " + sortOrder).Find(&users)
-	if query.Error != nil {
+	if err = query.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving users", "details": err.Error()})
 		return
 	}
@@ -149,8 +160,8 @@ func GetUserByIDHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	var existingUser models.User
-	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	if err := db.Where(searchById, userID).First(&existingUser).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": messageStatusNotFound})
 		return
 	}
 
@@ -174,7 +185,7 @@ func CreateUserHandler(c *gin.Context) {
 	var newUser models.User
 	// request body json
 	if err := c.BindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": messageStatusBadRequest})
 		return
 	}
 
@@ -184,7 +195,7 @@ func CreateUserHandler(c *gin.Context) {
 	//transformar senha do usuário em hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorCreatingUser, "details": err.Error()})
 		return
 	}
 	newUser.Password = string(hashedPassword)
@@ -200,7 +211,7 @@ func CreateUserHandler(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"error": "Error creating user. Email already in use", "details": err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorCreatingUser, "details": err.Error()})
 		return
 	}
 
@@ -223,7 +234,7 @@ func CreateUserMasterHandler(c *gin.Context) {
 	var newUser models.User
 	// request body json
 	if err := c.BindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": messageStatusBadRequest})
 		return
 	}
 
@@ -233,7 +244,7 @@ func CreateUserMasterHandler(c *gin.Context) {
 	//transformar senha do usuário em hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorCreatingUser, "details": err.Error()})
 		return
 	}
 	newUser.Password = string(hashedPassword)
@@ -242,7 +253,7 @@ func CreateUserMasterHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	if err := db.Create(&newUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorCreatingUser, "details": err.Error()})
 		return
 	}
 
@@ -271,14 +282,14 @@ func UpdateUserHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	var existingUser models.User
-	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	if err := db.Where(searchById, userID).First(&existingUser).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": messageStatusNotFound})
 		return
 	}
 
 	var updatedUser models.User
 	if err := c.BindJSON(&updatedUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": messageStatusBadRequest})
 		return
 	}
 
@@ -330,8 +341,8 @@ func DeleteUserHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	var existingUser models.User
-	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	if err := db.Where(searchById, userID).First(&existingUser).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": messageStatusNotFound})
 		return
 	}
 
@@ -341,7 +352,7 @@ func DeleteUserHandler(c *gin.Context) {
 	}
 
 	if err := db.Delete(&existingUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": err.Error()})
 		return
 	}
 
@@ -368,25 +379,25 @@ func DeleteUserMasterHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	var existingUser models.User
-	if err := db.Where("id = ?", userID).First(&existingUser).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	if err := db.Where(searchById, userID).First(&existingUser).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": messageStatusNotFound})
 		return
 	}
 
 	var count int64
 	var users []models.User
 	if err := db.Find(&users).Count(&count).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": err.Error()})
 		return
 	}
 
 	if count == 1 {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": "You cannot delete the last user master"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": "You cannot delete the last user master"})
 		return
 	}
 
 	if err := db.Delete(&existingUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting user", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": err.Error()})
 		return
 	}
 

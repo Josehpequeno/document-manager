@@ -29,10 +29,7 @@ export default function Login() {
         setUser({
           accessToken: response.data.access_token,
           refreshToken: response.data.refresh_token,
-          name: response.data.user.Name,
-          master: response.data.user.Master,
-          id: response.data.user.ID,
-          email: response.data.user.Email
+          ...response.data.user
         })
       );
     } catch (error) {

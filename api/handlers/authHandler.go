@@ -14,6 +14,7 @@ import (
 )
 
 var jwtKey = []byte(os.Getenv("API_SECRET"))
+var messageStatusUnauthorized = "Invalid token"
 
 type Claims struct {
 	UserID   uuid.UUID `json:"user_id"`
@@ -139,14 +140,14 @@ func AuthMiddleware(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
@@ -170,14 +171,14 @@ func AuthMiddlewareMaster(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
 		c.Abort()
 		return
 	}

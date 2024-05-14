@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
-import userReducer from './userSlice'
+import userReducer from "./userSlice";
 
 const store = configureStore({
   reducer: {
-    userState: userReducer,
+    userState: userReducer
   },
-  devTools: process.env.NODE_ENV === 'development',
+  devTools: process.env.NODE_ENV === "development",
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({}).concat([])
 });
 

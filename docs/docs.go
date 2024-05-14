@@ -1006,6 +1006,12 @@ const docTemplate = `{
         "handlers.UserResponse": {
             "type": "object",
             "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -1016,6 +1022,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

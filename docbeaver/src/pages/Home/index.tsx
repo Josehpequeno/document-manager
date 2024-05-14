@@ -23,7 +23,7 @@ export default function Home() {
             DocBeaver
           </h5>
         </div>
-        <nav className="flex flex-col gap-1 min-w-[200px] p-2 font-sans text-base font-normal text-gray-700">
+        <nav className="capitalize flex flex-col gap-1 min-w-[200px] p-2 font-sans text-base font-normal text-gray-700">
           <div
             role="button"
             tabIndex={0}
@@ -94,8 +94,7 @@ export default function Home() {
         </nav>
       </div>
       <div className="bg-slate-950 text-white flex-1 p-4">
-        <h1 className="text-2xl font-bold mb-4">Conteúdo Principal</h1>
-        <p>Seu conteúdo vai aqui...</p>
+        <h1 className="text-2xl font-bold mb-4">Files</h1>
       </div>
     </div>
   );
