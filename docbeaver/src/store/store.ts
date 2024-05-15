@@ -7,7 +7,7 @@ const store = configureStore({
   reducer: {
     userState: userReducer
   },
-  devTools: process.env.NODE_ENV === "development",
+  devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({}).concat([])
 });
 
