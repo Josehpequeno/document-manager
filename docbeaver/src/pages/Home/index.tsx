@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import logo from "../../logo.png";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { logout } from "../../store/userSlice";
@@ -16,18 +16,20 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 h-100 w-full max-w-[14rem] p-4 shadow-xl shadow-blue-gray-900/5">
-        <div className="mb-2 p-4 flex gap-2 items-center">
-          <img src={logo} className="w-10 rounded" alt="logo" />
-          <h5 className="block antialiased tracking-normal font-sans text-xl font-semibold leading-snug text-gray-900">
+      <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 h-100 w-full max-w-[2.5rem] md:max-w-[16rem] p-1 md:p-4 shadow-xl shadow-blue-gray-900/5">
+        <div className="mb-4 p-1 md:p-4 flex gap-2 items-center">
+          <Link to="/home">
+            <img src={logo} className="w-6 md:w-8 rounded" alt="logo" />
+          </Link>
+          <h5 className="hidden md:block antialiased tracking-normal font-sans text-base md:text-xl font-semibold leading-snug text-gray-900">
             DocBeaver
           </h5>
         </div>
-        <nav className="capitalize flex flex-col gap-1 min-w-[200px] p-2 font-sans text-base font-normal text-gray-700">
+        <nav className="capitalize flex flex-col gap-4 min-w-[200px] p-0 md:p-2 font-sans text-base font-normal text-gray-700">
           <div
             role="button"
             tabIndex={0}
-            className="flex items-center w-full p-3 rounded-lg text-start leading-tight transition-all hover:bg-blue-50 hover:bg-opacity-80 focus:bg-blue-50 focus:bg-opacity-80 active:bg-blue-50 active:bg-opacity-80 hover:text-blue-900 focus:text-blue-900 active:text-blue-900 outline-none"
+            className="flex items-center w-full p-1 md:p-3 rounded-lg text-start leading-tight transition-all hover:bg-blue-50 hover:bg-opacity-80 focus:bg-blue-50 focus:bg-opacity-80 active:bg-blue-50 active:bg-opacity-80 hover:text-blue-900 focus:text-blue-900 active:text-blue-900 outline-none"
           >
             <div className="grid place-items-center mr-4">
               <svg
@@ -35,7 +37,7 @@ export default function Home() {
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 aria-hidden="true"
-                className="h-5 w-5"
+                className="h-6 w-6 md:h-5 md:w-5"
               >
                 <path
                   fillRule="evenodd"
@@ -44,12 +46,12 @@ export default function Home() {
                 ></path>
               </svg>
             </div>
-            {user!.name}
+            <h6 className="hidden md:block">{user!.name}</h6>
           </div>
           <div
             role="button"
             tabIndex={0}
-            className="flex items-center w-full p-3 rounded-lg text-start leading-tight transition-all hover:bg-blue-50 hover:bg-opacity-80 focus:bg-blue-50 focus:bg-opacity-80 active:bg-blue-50 active:bg-opacity-80 hover:text-blue-900 focus:text-blue-900 active:text-blue-900 outline-none"
+            className="flex items-center w-full p-1 md:p-3 rounded-lg text-start leading-tight transition-all hover:bg-blue-50 hover:bg-opacity-80 focus:bg-blue-50 focus:bg-opacity-80 active:bg-blue-50 active:bg-opacity-80 hover:text-blue-900 focus:text-blue-900 active:text-blue-900 outline-none"
           >
             <div className="grid place-items-center mr-4">
               <svg
@@ -57,7 +59,7 @@ export default function Home() {
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 aria-hidden="true"
-                className="h-5 w-5"
+                className="h-6 w-6 md:h-5 md:w-5"
               >
                 <path
                   fillRule="evenodd"
@@ -66,12 +68,12 @@ export default function Home() {
                 ></path>
               </svg>
             </div>
-            Settings
+            <h6 className="hidden md:block">Settings</h6>
           </div>
           <div
             role="button"
             tabIndex={0}
-            className="flex items-center w-full p-3 rounded-lg text-start leading-tight transition-all hover:bg-blue-50 hover:bg-opacity-80 focus:bg-blue-50 focus:bg-opacity-80 active:bg-blue-50 active:bg-opacity-80 hover:text-blue-900 focus:text-blue-900 active:text-blue-900 outline-none"
+            className="flex items-center w-full p-1 md:p-3 rounded-lg text-start leading-tight transition-all hover:bg-blue-50 hover:bg-opacity-80 focus:bg-blue-50 focus:bg-opacity-80 active:bg-blue-50 active:bg-opacity-80 hover:text-blue-900 focus:text-blue-900 active:text-blue-900 outline-none"
             onClick={() => handleLogout()}
           >
             <div className="grid place-items-center mr-4">
@@ -80,7 +82,7 @@ export default function Home() {
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 aria-hidden="true"
-                className="h-5 w-5"
+                className="h-6 w-6 md:h-5 md:w-5"
               >
                 <path
                   fillRule="evenodd"
@@ -89,7 +91,7 @@ export default function Home() {
                 ></path>
               </svg>
             </div>
-            Log Out
+            <h6 className="hidden md:block">Log Out</h6>
           </div>
         </nav>
       </div>

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import logo from "../../logo.png";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { apiUrl } from "../../utils/config";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -43,7 +42,7 @@ export default function Signup() {
       passwordsMatchValidate
     ) {
       try {
-        await axios.post(`${apiUrl}/users`, {
+        await axios.post(`/users`, {
           email,
           name,
           password

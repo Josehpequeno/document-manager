@@ -95,7 +95,7 @@ func GetAllDocumentsHandler(c *gin.Context) {
 	var documents []models.Document
 
 	query := db.Offset(startInt).Limit(limitInt).Order(sortField + " " + sortOrder).Find(&documents)
-	if query.Error != nil {
+	if err = query.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving documents", "details": err.Error()})
 		return
 	}

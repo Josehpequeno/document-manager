@@ -2,6 +2,7 @@ package api
 
 import (
 	"document-manager/api/handlers"
+	"document-manager/api/utils"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,11 +14,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	//cors
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-
-	r.Use(cors.New(config))
+	r.Use(cors.New(utils.CORSConfig()))
 
 	r.GET("/", handlers.HelloHandler)
 

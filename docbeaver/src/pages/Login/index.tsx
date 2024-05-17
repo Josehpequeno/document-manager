@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import logo from "../../logo.png";
 import { Link, Navigate } from "react-router-dom";
 import axios from "axios";
-import { apiUrl } from "../../utils/config";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { setUser } from "../../store/userSlice";
 
@@ -21,7 +20,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${apiUrl}/login`, {
+      const response = await axios.post(`/login`, {
         password,
         username_or_email: usernameOrEmail
       });
@@ -33,7 +32,7 @@ export default function Login() {
         })
       );
     } catch (error) {
-      setError("Invalid username/email or password");
+      setError("Invalid username/email or password\n");
     }
   };
 
