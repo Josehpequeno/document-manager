@@ -6,7 +6,7 @@ let userFromLocalStorage;
 userFromLocalStorage = localStorage.getItem("user");
 
 const storedUser = userFromLocalStorage
-  ? JSON.parse(userFromLocalStorage) as User
+  ? (JSON.parse(userFromLocalStorage) as User)
   : null;
 
 interface UserState {
@@ -17,13 +17,17 @@ const initialState: UserState = {
   user: storedUser || null
 };
 
+const removeState: UserState = {
+  user: null
+};
+
 export const userSlice = createSlice({
   initialState,
   name: "userSlice",
   reducers: {
     logout: () => {
       localStorage.removeItem("user");
-      return initialState;
+      return removeState;
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
