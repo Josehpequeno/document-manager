@@ -3,6 +3,7 @@ import logo from "../../logo.png";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { logout } from "../../store/userSlice";
 import { useEffect, useRef, useState } from "react";
+import axios from "axios";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [files, setFiles] = useState<number[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -24,7 +26,7 @@ export default function Home() {
       fileInputRef.current.click();
     }
     if (files && files.length > 0) {
-      console.log(files);
+      handleUpload(files[0]);
     }
   };
 
@@ -34,7 +36,7 @@ export default function Home() {
     setDragging(false);
     const files = event.dataTransfer.files;
     if (files && files.length > 0) {
-      console.log(files);
+      handleUpload(files[0]);
     }
   };
 
@@ -48,6 +50,27 @@ export default function Home() {
     event.preventDefault();
     event.stopPropagation();
     setDragging(false);
+  };
+
+  const handleUpload = async (file: File) => {
+    try {
+      const form = new FormData();
+      form.append("description", "description test");
+      form.append("owner_id", user!.id);
+      form.append("owner_name", user!.name);
+      form.append("title", "title test");
+      form.append("file", file);
+      const response = await axios.post("/documents", form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: user!.accessToken
+        }
+      });
+      console.log(response.status, response.data);
+    } catch (error) {
+      console.error(error);
+      setError("Error uploading file");
+    }
   };
 
   useEffect(() => {

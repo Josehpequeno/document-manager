@@ -32,6 +32,13 @@ type DocumentRequest struct {
 	OwnerName   string `json:"owner_name"`
 }
 
+type DocumentRequestFile struct {
+	Title       string `form:"title" binding:"required"`
+	Description string `form:"description"`
+	OwnerID     string `form:"owner_id"`
+	OwnerName   string `form:"owner_name"`
+}
+
 type MessageWithDocumentResponse struct {
 	Message  string           `json:"message"`
 	Document DocumentResponse `json:"document"`
@@ -223,6 +230,7 @@ func GetDocumentFileByIDHandler(c *gin.Context) {
 // @Success 201 {object} DocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /documents [post]
 func CreateDocumentHandler(c *gin.Context) {
 	err := c.Request.ParseMultipartForm(200 << 20) // 200 MB limit
@@ -231,7 +239,7 @@ func CreateDocumentHandler(c *gin.Context) {
 		return
 	}
 
-	var docRequest DocumentRequest
+	var docRequest DocumentRequestFile
 	if err := c.Bind(&docRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
 		return
@@ -296,6 +304,7 @@ func CreateDocumentHandler(c *gin.Context) {
 // @Success 200 {object} MessageWithDocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /documents/upload/{id} [put]
 func UpdateDocumentHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")
@@ -391,6 +400,7 @@ func UpdateDocumentHandler(c *gin.Context) {
 // @Success 200 {object} MessageWithDocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /documents/{id} [put]
 func UpdateDocumentWithoutFileHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")
@@ -457,6 +467,7 @@ func UpdateDocumentWithoutFileHandler(c *gin.Context) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
+// @Security Bearer
 // @Router /documents/{id} [delete]
 func DeleteDocumentHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")

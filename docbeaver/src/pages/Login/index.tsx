@@ -32,7 +32,7 @@ export default function Login() {
         })
       );
     } catch (error) {
-      setError("Invalid username/email or password\n");
+      setError("Invalid username/email or password");
     }
   };
 

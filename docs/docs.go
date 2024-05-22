@@ -124,6 +124,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Create a new document",
                 "consumes": [
                     "multipart/form-data"
@@ -231,6 +236,11 @@ const docTemplate = `{
         },
         "/documents/upload/{id}": {
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Upload a document with a file",
                 "consumes": [
                     "multipart/form-data"
@@ -336,6 +346,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Upload a document without a file",
                 "produces": [
                     "application/json"
@@ -367,6 +382,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Delete a document by ID",
                 "consumes": [
                     "application/json"
@@ -778,6 +798,11 @@ const docTemplate = `{
         },
         "/usersMaster": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Create a new user master",
                 "consumes": [
                     "application/json"

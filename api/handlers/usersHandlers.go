@@ -229,6 +229,7 @@ func CreateUserHandler(c *gin.Context) {
 // @Success 201 {object} UserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponseWithDetails
+// @Security Bearer
 // @Router /usersMaster [post]
 func CreateUserMasterHandler(c *gin.Context) {
 	var newUser models.User

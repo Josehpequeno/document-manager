@@ -210,6 +210,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Create a new document
       tags:
       - Documents
@@ -244,6 +246,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Delete a document by ID
       tags:
       - Documents
@@ -304,6 +308,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Upload a document without a file
       tags:
       - Documents
@@ -374,6 +380,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
       summary: Upload a document with a file
       tags:
       - Documents
@@ -641,6 +649,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.ErrorResponseWithDetails'
+      security:
+      - Bearer: []
       summary: Create a new user master
       tags:
       - Users

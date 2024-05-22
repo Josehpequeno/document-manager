@@ -1,13 +1,12 @@
+import { getItem } from "../utils/localStorageWithExpiry";
 import { User } from "./../Interfaces/User";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 let userFromLocalStorage;
 
-userFromLocalStorage = localStorage.getItem("user");
+userFromLocalStorage = getItem("user");
 
-const storedUser = userFromLocalStorage
-  ? (JSON.parse(userFromLocalStorage) as User)
-  : null;
+const storedUser = userFromLocalStorage ? (userFromLocalStorage as User) : null;
 
 interface UserState {
   user: User | null;
@@ -31,7 +30,12 @@ export const userSlice = createSlice({
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
-      localStorage.setItem("user", JSON.stringify(action.payload));
+      const now = new Date();
+      const item = {
+        user: action.payload,
+        expiry: now.getTime() + 24 * 60 * 60 * 1000 // one day in milliseconds
+      };
+      localStorage.setItem("user", JSON.stringify(item));
     }
   }
 });
