@@ -36,10 +36,21 @@ export const userSlice = createSlice({
         expiry: now.getTime() + 24 * 60 * 60 * 1000 // one day in milliseconds
       };
       localStorage.setItem("user", JSON.stringify(item));
+    },
+    updateAccessToken: (state, action: PayloadAction<string>) => {
+      if (!state.user) return state;
+      state.user.access_token = action.payload;
+      const now = new Date();
+      const item = {
+        user: action.payload,
+        expiry: now.getTime() + 24 * 60 * 60 * 1000 // one day in milliseconds
+      };
+      localStorage.setItem("user", JSON.stringify(item));
+      return state;
     }
   }
 });
 
 export default userSlice.reducer;
 
-export const { logout, setUser } = userSlice.actions;
+export const { logout, setUser, updateAccessToken } = userSlice.actions;

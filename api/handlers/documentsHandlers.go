@@ -267,6 +267,8 @@ func CreateDocumentHandler(c *gin.Context) {
 		return
 	}
 
+	// utils.GenerateThumbnail(filepath, documentID.String())
+
 	db := database.GetDB()
 
 	newDocument := models.Document{

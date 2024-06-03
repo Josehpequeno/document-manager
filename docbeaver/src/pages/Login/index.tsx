@@ -26,8 +26,8 @@ export default function Login() {
       });
       dispatch(
         setUser({
-          accessToken: response.data.access_token,
-          refreshToken: response.data.refresh_token,
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token,
           ...response.data.user
         })
       );

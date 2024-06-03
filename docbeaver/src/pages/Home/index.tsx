@@ -1,19 +1,21 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import logo from "../../logo.png";
 import { useAppDispatch, useAppSelector } from "../../store/store";
-import { logout } from "../../store/userSlice";
+import { logout, updateAccessToken } from "../../store/userSlice";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { Document } from "../../Interfaces/Document";
 
 export default function Home() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.userState.user);
-  const [uploadMode, setUploadMode] = useState(true);
+  const [uploadMode, setUploadMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [files, setFiles] = useState<number[]>([]);
+  const [files, setFiles] = useState<Document[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean | null>(null);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -21,6 +23,7 @@ export default function Home() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSuccess(null);
     const files = e.target.files;
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -60,25 +63,48 @@ export default function Home() {
       form.append("owner_name", user!.name);
       form.append("title", "title test");
       form.append("file", file);
-      const response = await axios.post("/documents", form, {
+      await axios.post("/documents", form, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: user!.accessToken
+          Authorization: user!.access_token
         }
       });
-      console.log(response.status, response.data);
-    } catch (error) {
-      console.error(error);
-      setError("Error uploading file");
+      setSuccess(true);
+    } catch (error: any) {
+      const { status } = error.response;
+      if (status === 401) {
+        try {
+          const response = await axios.post("/refresh-token", {
+            refresh_token: user!.refresh_token
+          });
+          const { access_token } = response.data;
+          dispatch(updateAccessToken(access_token));
+          handleUpload(file);
+        } catch (error) {
+          setError("Error uploading file");
+        }
+      }
     }
   };
 
   useEffect(() => {
-    setFiles([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const getFiles = async () => {
+      const response = await axios.get("/documents", {
+        headers: {
+          Authorization: user!.access_token
+        }
+      });
+      setFiles(response.data.documents);
+    };
+    getFiles();
     if (!user) {
       navigate("/login", { replace: true });
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    setSuccess(false);
+  }, [uploadMode]);
 
   return (
     <div className="flex">
@@ -162,6 +188,23 @@ export default function Home() {
         </nav>
       </div>
       <div className="h-100 bg-slate-950 text-white flex-1">
+        {error && (
+          <div
+            className="text-xs md:text-sm flex gap-1 justify-center bg-red-100 border border-red-400 text-red-700 px-2 py-2 rounded relative mt-4"
+            role="alert"
+          >
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
+        {success && (
+          <div
+            className="text-xs md:text-sm flex gap-1 justify-center bg-red-100 border border-green-400 text-green-700 px-2 py-2 rounded relative mt-4"
+            role="alert"
+          >
+            <span className="block sm:inline"> File upload with sucess</span>
+          </div>
+        )}
         <div className="flex flex-row gap-4 items-center justify-center align-middle mt-4">
           <h1 className="text-2xl font-bold">Files</h1>
           <button className="bg-slate-950 hover:bg-white text-white hover:text-slate-950 font-bold py-2 px-4 rounded inline-flex items-center">
@@ -257,7 +300,7 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="h-100 lg:h-svh w-full p-0 md:p-4">
+          <div className="h-svh w-full p-0 md:p-4">
             {files.length === 0 ? (
               <div className="h-100 text-center">
                 <h6>No items found</h6>
@@ -268,27 +311,28 @@ export default function Home() {
                 {/* item */}
                 {files.map((file) => (
                   <div
-                    id={file.toString()}
-                    className="bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
+                    key={file.id}
+                    className="bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden w-full"
                   >
                     <div className="relative h-32 bg-gray-600">
                       <img
                         className="absolute inset-0 w-full h-full object-cover object-center"
-                        src={logo}
+                        src={file.thumbnailUrl ? file.thumbnailUrl : logo}
                         alt="Cover"
                       />
                     </div>
-                    <div className="relative mt-2 px-4 pb-4">
+                    <div className="relative mt-2 px-4 pb-4 w-3/4">
                       <div className="flex justify-between">
-                        <div>
+                        <div className="">
                           <h1 className="text-lg md:text-2xl font-semibold text-gray-800 mt-2">
-                            Kaleab Selamawi
+                            {" "}
+                            {file.title}
                           </h1>
                           <p className="text-sm text-gray-600">
-                            @coding4ethiopia
+                            {file.description}
                           </p>
-                          <p className="text-sm text-gray-600 mt-2">
-                            Software Engineer at C4E Company
+                          <p className="text-sm font-semibold text-gray-700 mt-2">
+                            Owner: {file.owner_name}
                           </p>
                         </div>
                       </div>

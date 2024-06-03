@@ -140,14 +140,14 @@ func AuthMiddleware(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
@@ -171,14 +171,14 @@ func AuthMiddlewareMaster(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": messageStatusUnauthorized})
+		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: messageStatusUnauthorized})
 		c.Abort()
 		return
 	}
@@ -192,4 +192,54 @@ func AuthMiddlewareMaster(c *gin.Context) {
 	c.Set("claims", claims)
 
 	c.Next()
+}
+
+// RefreshTokenHandler handles the generation of a new access token using a valid refresh token.
+// @Summary Refresh Access Token
+// @Description refresh access token
+// @ID refresh-token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param refresh_token body string true "Refresh Token"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /refresh-token [post]
+func RefreshTokenHandler(c *gin.Context) {
+	var requestBody struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{ErrorMessage: "Invalid data"})
+		return
+	}
+
+	refreshTokenStr := requestBody.RefreshToken
+	token, err := jwt.ParseWithClaims(refreshTokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: messageStatusUnauthorized})
+		return
+	}
+
+	claims, ok := token.Claims.(*Claims) //verifica se token.Claims pode ser convertido para o tipo *Claims
+	if !ok || claims.ExpiresAt < time.Now().Unix() {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{ErrorMessage: messageStatusUnauthorized})
+		return
+	}
+
+	accessToken, _, err := generateTokens(claims.UserID, claims.IsMaster)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{ErrorMessage: "Error generating tokens"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"access_token": accessToken,
+	})
 }

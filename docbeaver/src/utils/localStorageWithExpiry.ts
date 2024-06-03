@@ -3,11 +3,11 @@ export function getItem(key: string) {
   if (!itemStr) {
     return null;
   }
-  
+
   const item = JSON.parse(itemStr);
   const now = new Date();
 
-  if (now.getTime > item.expiry) {
+  if (now.getTime() > item.expiry) {
     localStorage.removeItem(key);
     return null;
   }

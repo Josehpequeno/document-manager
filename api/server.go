@@ -18,24 +18,40 @@ func SetupRouter() *gin.Engine {
 
 	r.GET("/", handlers.HelloHandler)
 
-	r.GET("/users", handlers.AuthMiddleware, handlers.GetAllUsersHandler)
-	r.GET("/users/:id", handlers.AuthMiddleware, handlers.GetUserByIDHandler)
+	r.POST("/refresh-token", handlers.RefreshTokenHandler)
+
+	usersProtected := r.Group("/users")
+	usersProtected.Use(handlers.AuthMiddleware)
+	{
+		usersProtected.GET("/", handlers.GetAllUsersHandler)
+		usersProtected.GET("/:id", handlers.GetUserByIDHandler)
+		usersProtected.PUT("/:id", handlers.UpdateUserHandler)
+		usersProtected.DELETE("/:id", handlers.DeleteUserHandler)
+	}
 	r.POST("/users", handlers.CreateUserHandler)
-	r.PUT("/users/:id", handlers.AuthMiddleware, handlers.UpdateUserHandler)
-	r.DELETE("/users/:id", handlers.AuthMiddleware, handlers.DeleteUserHandler)
+
 	//master
-	r.POST("/usersMaster", handlers.AuthMiddlewareMaster, handlers.CreateUserMasterHandler)
-	r.DELETE("/usersMaster/:id", handlers.AuthMiddlewareMaster, handlers.DeleteUserMasterHandler)
+	usersMasterProtect := r.Group("/usersMaster")
+	usersMasterProtect.Use(handlers.AuthMiddlewareMaster)
+	{
+		r.POST("/", handlers.CreateUserMasterHandler)
+		r.DELETE("/:id", handlers.DeleteUserMasterHandler)
+	}
 	r.POST("/login", handlers.LoginHandler)
 
 	// documents
-	r.GET("/documents", handlers.AuthMiddleware, handlers.GetAllDocumentsHandler)
-	r.GET("/documents/:id", handlers.AuthMiddleware, handlers.GetDocumentByIDHandler)
-	r.GET("/documents/file/:id", handlers.AuthMiddleware, handlers.GetDocumentFileByIDHandler)
-	r.POST("/documents", handlers.AuthMiddleware, handlers.CreateDocumentHandler)
-	r.PUT("/documents/upload/:id", handlers.AuthMiddleware, handlers.UpdateDocumentHandler)
-	r.PUT("/documents/:id", handlers.AuthMiddleware, handlers.UpdateDocumentWithoutFileHandler)
-	r.DELETE("/documents/:id", handlers.AuthMiddleware, handlers.DeleteDocumentHandler)
+	documentsProtected := r.Group("/documents")
+	documentsProtected.Use(handlers.AuthMiddleware)
+	{
+		documentsProtected.GET("/", handlers.GetAllDocumentsHandler)
+		documentsProtected.GET("/:id", handlers.GetDocumentByIDHandler)
+		documentsProtected.POST("/", handlers.CreateDocumentHandler)
+		documentsProtected.PUT("/:id", handlers.UpdateDocumentWithoutFileHandler)
+		documentsProtected.DELETE("/:id", handlers.DeleteDocumentHandler)
+		documentsProtected.GET("/file/:id", handlers.GetDocumentFileByIDHandler)
+		documentsProtected.PUT("/upload/:id", handlers.UpdateDocumentHandler)
+	}
+
 	//swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
