@@ -4,6 +4,8 @@ definitions:
     properties:
       description:
         type: string
+      filepath:
+        type: string
       id:
         type: string
       owner_id:

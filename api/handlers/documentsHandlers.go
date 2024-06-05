@@ -23,6 +23,7 @@ type DocumentResponse struct {
 	Description string    `json:"description"`
 	OwnerID     string    `json:"owner_id"`
 	OwnerName   string    `json:"owner_name"`
+	FilePath    string    `json:"filepath"`
 }
 
 type DocumentRequest struct {
@@ -227,6 +228,9 @@ func GetDocumentFileByIDHandler(c *gin.Context) {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "Document file"
+// @Param chunkIndex formData int true "Index of the current chunk (starting from 0)"
+// @Param chunkTotal formData int true "Total number of chunks"
+// @Param file formData file true "Chunk file to upload"
 // @Success 201 {object} DocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -266,8 +270,6 @@ func CreateDocumentHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file", "details": err.Error()})
 		return
 	}
-
-	// utils.GenerateThumbnail(filepath, documentID.String())
 
 	db := database.GetDB()
 

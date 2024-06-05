@@ -7,5 +7,5 @@ export interface Document {
   updatedAt: string;
   deletedAt: string;
   description: string;
-  thumbnailUrl: string;
+  filepath: string;
 }

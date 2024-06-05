@@ -965,6 +965,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "filepath": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },

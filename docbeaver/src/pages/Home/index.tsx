@@ -1,10 +1,13 @@
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../logo.png";
 import { useAppDispatch, useAppSelector } from "../../store/store";
-import { logout, updateAccessToken } from "../../store/userSlice";
+import { logout } from "../../store/userSlice";
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import axios from "../../utils/axios";
 import { Document } from "../../Interfaces/Document";
+import ThumbnailView from "../../Components/thumbnailView";
+
+// const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function Home() {
   const navigate = useNavigate();
@@ -16,10 +19,13 @@ export default function Home() {
   const [files, setFiles] = useState<Document[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean | null>(null);
+  // const [uploadProgress, setUploadProgress] = useState(0);
+  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleLogout = () => {
     dispatch(logout());
-    return <Navigate to="/login" replace={true} />;
+    navigate("/login", { replace: true });
+    return;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +35,7 @@ export default function Home() {
       fileInputRef.current.click();
     }
     if (files && files.length > 0) {
+      // setSelectedFile(files[0]);
       handleUpload(files[0]);
     }
   };
@@ -39,6 +46,7 @@ export default function Home() {
     setDragging(false);
     const files = event.dataTransfer.files;
     if (files && files.length > 0) {
+      // setSelectedFile(files[0]);
       handleUpload(files[0]);
     }
   };
@@ -56,6 +64,10 @@ export default function Home() {
   };
 
   const handleUpload = async (file: File) => {
+    // const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    // let uploadedChunks = 0;
+    // for (let start = 0; start < file.size; start += CHUNK_SIZE) {
+    // const chunk = file.slice(start, start + CHUNK_SIZE);
     try {
       const form = new FormData();
       form.append("description", "description test");
@@ -63,52 +75,53 @@ export default function Home() {
       form.append("owner_name", user!.name);
       form.append("title", "title test");
       form.append("file", file);
+      // form.append("chunk", chunk);
+      // form.append("totalChunks", totalChunks.toString());
+      // form.append("currentChunk", (start / CHUNK_SIZE).toString());
+      // try {
       await axios.post("/documents", form, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: user!.access_token
         }
       });
-      setSuccess(true);
+      // uploadedChunks += 1;
+      // setUploadProgress(Math.round((uploadedChunks / totalChunks) * 100));
     } catch (error: any) {
-      const { status } = error.response;
-      if (status === 401) {
-        try {
-          const response = await axios.post("/refresh-token", {
-            refresh_token: user!.refresh_token
-          });
-          const { access_token } = response.data;
-          dispatch(updateAccessToken(access_token));
-          handleUpload(file);
-        } catch (error) {
-          setError("Error uploading file");
-        }
-      }
+      console.error(error);
+      setError(error.message);
     }
+    // }
+    setSuccess(true);
   };
 
   useEffect(() => {
-    const getFiles = async () => {
-      const response = await axios.get("/documents", {
-        headers: {
-          Authorization: user!.access_token
-        }
-      });
-      setFiles(response.data.documents);
-    };
-    getFiles();
     if (!user) {
       navigate("/login", { replace: true });
+      return;
     }
-  }, [user, navigate]);
+    const getFiles = async () => {
+      try {
+        const response = await axios.get("/documents", {
+          headers: {
+            Authorization: user!.access_token
+          }
+        });
+        setFiles(response.data.documents);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getFiles();
+  }, [user, navigate, success]);
 
   useEffect(() => {
     setSuccess(false);
   }, [uploadMode]);
 
   return (
-    <div className="flex">
-      <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 h-100 w-full max-w-[2.5rem] md:max-w-[12rem] p-1 md:p-4 shadow-xl shadow-blue-gray-900/5">
+    <div className="h-full flex">
+      <div className="min-h-screen relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 h-100 w-full max-w-[2.5rem] md:max-w-[12rem] p-1 md:p-4 shadow-xl shadow-blue-gray-900/5">
         <div className="mb-4 p-1 md:p-4 flex gap-2 items-center">
           <Link to="/home">
             <img src={logo} className="w-6 md:w-8 rounded" alt="logo" />
@@ -187,7 +200,7 @@ export default function Home() {
           </div>
         </nav>
       </div>
-      <div className="h-100 bg-slate-950 text-white flex-1">
+      <div className="h-full bg-slate-950 text-white flex-1 min-h-screen">
         {error && (
           <div
             className="text-xs md:text-sm flex gap-1 justify-center bg-red-100 border border-red-400 text-red-700 px-2 py-2 rounded relative mt-4"
@@ -205,6 +218,7 @@ export default function Home() {
             <span className="block sm:inline"> File upload with sucess</span>
           </div>
         )}
+        {/* {selectedFile && <p>Upload Progress: {uploadProgress}%</p>} */}
         <div className="flex flex-row gap-4 items-center justify-center align-middle mt-4">
           <h1 className="text-2xl font-bold">Files</h1>
           <button className="bg-slate-950 hover:bg-white text-white hover:text-slate-950 font-bold py-2 px-4 rounded inline-flex items-center">
@@ -300,28 +314,27 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="h-svh w-full p-0 md:p-4">
+          <div className="h-100 w-full p-0 md:p-4">
             {files.length === 0 ? (
               <div className="h-100 text-center">
                 <h6>No items found</h6>
               </div>
             ) : (
               // items
-              <div className="h-100 mt-4 px-3 items-center grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-2">
+              <div className="w-100 h-100 mt-4 px-3 items-center grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-2">
                 {/* item */}
                 {files.map((file) => (
                   <div
                     key={file.id}
-                    className="bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden w-full"
+                    className="w-full bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
                   >
-                    <div className="relative h-32 bg-gray-600">
-                      <img
-                        className="absolute inset-0 w-full h-full object-cover object-center"
-                        src={file.thumbnailUrl ? file.thumbnailUrl : logo}
-                        alt="Cover"
+                    <div className="h-full w-full bg-white justify-center flex ">
+                      <ThumbnailView
+                        access_token={user!.access_token}
+                        fileId={file.id}
                       />
                     </div>
-                    <div className="relative mt-2 px-4 pb-4 w-3/4">
+                    <div className="relative mt-2 px-4 pb-4 w-full">
                       <div className="flex justify-between">
                         <div className="">
                           <h1 className="text-lg md:text-2xl font-semibold text-gray-800 mt-2">
