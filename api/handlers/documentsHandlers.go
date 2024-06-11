@@ -228,14 +228,11 @@ func GetDocumentFileByIDHandler(c *gin.Context) {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "Document file"
-// @Param chunkIndex formData int true "Index of the current chunk (starting from 0)"
-// @Param chunkTotal formData int true "Total number of chunks"
-// @Param file formData file true "Chunk file to upload"
 // @Success 201 {object} DocumentResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security Bearer
-// @Router /documents [post]
+// @Router /documents/upload [post]
 func CreateDocumentHandler(c *gin.Context) {
 	err := c.Request.ParseMultipartForm(200 << 20) // 200 MB limit
 	if err != nil {

@@ -45,10 +45,10 @@ func SetupRouter() *gin.Engine {
 	{
 		documentsProtected.GET("/", handlers.GetAllDocumentsHandler)
 		documentsProtected.GET("/:id", handlers.GetDocumentByIDHandler)
-		documentsProtected.POST("/", handlers.CreateDocumentHandler)
 		documentsProtected.PUT("/:id", handlers.UpdateDocumentWithoutFileHandler)
 		documentsProtected.DELETE("/:id", handlers.DeleteDocumentHandler)
 		documentsProtected.GET("/file/:id", handlers.GetDocumentFileByIDHandler)
+		documentsProtected.POST("/upload", handlers.CreateDocumentHandler)
 		documentsProtected.PUT("/upload/:id", handlers.UpdateDocumentHandler)
 	}
 

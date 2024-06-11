@@ -7,8 +7,6 @@ import axios from "../../utils/axios";
 import { Document } from "../../Interfaces/Document";
 import ThumbnailView from "../../Components/thumbnailView";
 
-// const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
-
 export default function Home() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -19,8 +17,8 @@ export default function Home() {
   const [files, setFiles] = useState<Document[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean | null>(null);
-  // const [uploadProgress, setUploadProgress] = useState(0);
-  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -35,8 +33,10 @@ export default function Home() {
       fileInputRef.current.click();
     }
     if (files && files.length > 0) {
-      // setSelectedFile(files[0]);
-      handleUpload(files[0]);
+      if (files[0].type === "application/pdf") {
+        setSelectedFile(files[0]);
+        handleUpload(files[0]);
+      }
     }
   };
 
@@ -46,8 +46,10 @@ export default function Home() {
     setDragging(false);
     const files = event.dataTransfer.files;
     if (files && files.length > 0) {
-      // setSelectedFile(files[0]);
-      handleUpload(files[0]);
+      if (files[0].type === "application/pdf") {
+        setSelectedFile(files[0]);
+        handleUpload(files[0]);
+      }
     }
   };
 
@@ -64,10 +66,6 @@ export default function Home() {
   };
 
   const handleUpload = async (file: File) => {
-    // const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    // let uploadedChunks = 0;
-    // for (let start = 0; start < file.size; start += CHUNK_SIZE) {
-    // const chunk = file.slice(start, start + CHUNK_SIZE);
     try {
       const form = new FormData();
       form.append("description", "description test");
@@ -75,24 +73,26 @@ export default function Home() {
       form.append("owner_name", user!.name);
       form.append("title", "title test");
       form.append("file", file);
-      // form.append("chunk", chunk);
-      // form.append("totalChunks", totalChunks.toString());
-      // form.append("currentChunk", (start / CHUNK_SIZE).toString());
-      // try {
-      await axios.post("/documents", form, {
+      await axios.post("/documents/upload", form, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: user!.access_token
+        },
+        onUploadProgress: function (progressEvent) {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(percentCompleted);
+          }
         }
       });
-      // uploadedChunks += 1;
-      // setUploadProgress(Math.round((uploadedChunks / totalChunks) * 100));
     } catch (error: any) {
       console.error(error);
       setError(error.message);
     }
-    // }
     setSuccess(true);
+    setSelectedFile(null);
   };
 
   useEffect(() => {
@@ -218,7 +218,6 @@ export default function Home() {
             <span className="block sm:inline"> File upload with sucess</span>
           </div>
         )}
-        {/* {selectedFile && <p>Upload Progress: {uploadProgress}%</p>} */}
         <div className="flex flex-row gap-4 items-center justify-center align-middle mt-4">
           <h1 className="text-2xl font-bold">Files</h1>
           <button className="bg-slate-950 hover:bg-white text-white hover:text-slate-950 font-bold py-2 px-4 rounded inline-flex items-center">
@@ -270,7 +269,24 @@ export default function Home() {
             </span>
           </button>
         </div>
-        {/* items */}
+        {selectedFile && (
+          <>
+            <div className="flex justify-between mb-2 mx-4">
+              <span className="text-base font-medium text-white dark:text-white">
+                Upload Progress
+              </span>
+              <span className="text-sm font-medium text-white dark:text-white">
+                {uploadProgress}%
+              </span>
+            </div>
+            <div className="rounded bg-primary text-white text-center mx-4 h-4">
+              <div
+                className="bg-green-500 rounded h-4"
+                style={{ width: uploadProgress + "%" }}
+              ></div>
+            </div>
+          </>
+        )}
         {uploadMode ? (
           <div className="h-100 w-100 p-4 m-auto">
             <div
@@ -326,15 +342,15 @@ export default function Home() {
                 {files.map((file) => (
                   <div
                     key={file.id}
-                    className="w-full bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
+                    className=" h-full w-100 bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
                   >
-                    <div className="h-full w-full bg-white justify-center flex ">
+                    <div className="h-3/4 w-full bg-gray-100 justify-center flex ">
                       <ThumbnailView
                         access_token={user!.access_token}
                         fileId={file.id}
                       />
                     </div>
-                    <div className="relative mt-2 px-4 pb-4 w-full">
+                    <div className="h-1/4 mt-2 px-4 pb-4 w-full">
                       <div className="flex justify-between">
                         <div className="">
                           <h1 className="text-lg md:text-2xl font-semibold text-gray-800 mt-2">

@@ -16,7 +16,7 @@ export default function ThumbnailView({
   const thumbnailPluginInstance = thumbnailPlugin();
   const { Cover } = thumbnailPluginInstance;
   const pageThumbnailPluginInstance = pageThumbnailPlugin({
-    PageThumbnail: <Cover width={400} getPageIndex={() => 0} />
+    PageThumbnail: <Cover width={300} getPageIndex={() => 0} />
   });
   const [file, setFile] = useState<string | null>(null);
   const [blobStorage, setBlobStorage] = useState<Blob | null>(null);
