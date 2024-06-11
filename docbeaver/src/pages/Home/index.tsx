@@ -2,19 +2,17 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../../logo.png";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { logout } from "../../store/userSlice";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "../../utils/axios";
-import { Document } from "../../Interfaces/Document";
-import ThumbnailView from "../../Components/thumbnailView";
+
+import UploadView from "../../Components/UploadView";
+import FilesView from "../../Components/FilesView";
 
 export default function Home() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.userState.user);
   const [uploadMode, setUploadMode] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
-  const [files, setFiles] = useState<Document[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -26,52 +24,14 @@ export default function Home() {
     return;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSuccess(null);
-    const files = e.target.files;
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-    if (files && files.length > 0) {
-      if (files[0].type === "application/pdf") {
-        setSelectedFile(files[0]);
-        handleUpload(files[0]);
-      }
-    }
-  };
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setDragging(false);
-    const files = event.dataTransfer.files;
-    if (files && files.length > 0) {
-      if (files[0].type === "application/pdf") {
-        setSelectedFile(files[0]);
-        handleUpload(files[0]);
-      }
-    }
-  };
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setDragging(true);
-  };
-
-  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setDragging(false);
-  };
-
   const handleUpload = async (file: File) => {
     try {
+      const name = file.name.split(".")[0];
       const form = new FormData();
       form.append("description", "description test");
       form.append("owner_id", user!.id);
       form.append("owner_name", user!.name);
-      form.append("title", "title test");
+      form.append("title", name);
       form.append("file", file);
       await axios.post("/documents/upload", form, {
         headers: {
@@ -91,8 +51,10 @@ export default function Home() {
       console.error(error);
       setError(error.message);
     }
-    setSuccess(true);
-    setSelectedFile(null);
+    setTimeout(() => {
+      setSuccess(true);
+      setSelectedFile(null);
+    }, 250);
   };
 
   useEffect(() => {
@@ -100,20 +62,7 @@ export default function Home() {
       navigate("/login", { replace: true });
       return;
     }
-    const getFiles = async () => {
-      try {
-        const response = await axios.get("/documents", {
-          headers: {
-            Authorization: user!.access_token
-          }
-        });
-        setFiles(response.data.documents);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    getFiles();
-  }, [user, navigate, success]);
+  }, [user, navigate]);
 
   useEffect(() => {
     setSuccess(false);
@@ -288,90 +237,17 @@ export default function Home() {
           </>
         )}
         {uploadMode ? (
-          <div className="h-100 w-100 p-4 m-auto">
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-            >
-              <label
-                className={`flex justify-center h-svh w-100 px-4 transition bg-slate-950 border-2  border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none ${
-                  dragging ? "border-sky-300" : "border-gray-200"
-                }`}
-              >
-                <span className="flex items-center space-x-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-gray-200"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                  <span className="font-medium text-gray-200">
-                    Drop files to Attach, or{" "}
-                    <span className="text-primary underline">browse</span>
-                  </span>
-                </span>
-                <input
-                  type="file"
-                  name="file_upload"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-              </label>
-            </div>
-          </div>
+          <UploadView
+            setSuccess={setSuccess}
+            setSelectedFile={setSelectedFile}
+            handleUpload={handleUpload}
+          ></UploadView>
         ) : (
-          <div className="h-100 w-full p-0 md:p-4">
-            {files.length === 0 ? (
-              <div className="h-100 text-center">
-                <h6>No items found</h6>
-              </div>
-            ) : (
-              // items
-              <div className="w-100 h-100 mt-4 px-3 items-center grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-2">
-                {/* item */}
-                {files.map((file) => (
-                  <div
-                    key={file.id}
-                    className=" h-full w-100 bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
-                  >
-                    <div className="h-3/4 w-full bg-gray-100 justify-center flex ">
-                      <ThumbnailView
-                        access_token={user!.access_token}
-                        fileId={file.id}
-                      />
-                    </div>
-                    <div className="h-1/4 mt-2 px-4 pb-4 w-full">
-                      <div className="flex justify-between">
-                        <div className="">
-                          <h1 className="text-lg md:text-2xl font-semibold text-gray-800 mt-2">
-                            {" "}
-                            {file.title}
-                          </h1>
-                          <p className="text-sm text-gray-600">
-                            {file.description}
-                          </p>
-                          <p className="text-sm font-semibold text-gray-700 mt-2">
-                            Owner: {file.owner_name}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {/* item */}
-              </div>
-            )}
-          </div>
+          <FilesView
+            user={user}
+            success={success}
+            navigate={navigate}
+          ></FilesView>
         )}
       </div>
     </div>
