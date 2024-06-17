@@ -98,12 +98,9 @@ func LoginHandler(c *gin.Context) {
 	db := database.GetDB()
 
 	var user models.User
-	if err := db.Where("name = ?", loginData.UsernameOrEmail).First(&user).Error; err != nil {
-		if err = db.Where("email = ?", loginData.UsernameOrEmail).First(&user).Error; err != nil {
-			//se não for email verificar se foi passado o nome
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-			return
-		}
+	if err := db.Where("name = ? OR email = ?", loginData.UsernameOrEmail, loginData.UsernameOrEmail).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
 	}
 
 	err := VerifyPassword(loginData.Password, user.Password)

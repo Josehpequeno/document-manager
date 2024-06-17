@@ -9,9 +9,15 @@ interface FileViewProps {
   navigate: NavigateFunction;
   success: boolean | null;
   user: User | null;
+  setViewMode: Function;
 }
 
-export default function FilesView({ navigate, success, user }: FileViewProps) {
+export default function FilesView({
+  navigate,
+  success,
+  user,
+  setViewMode
+}: FileViewProps) {
   const [files, setFiles] = useState<Document[]>([]);
   const [removeModeFileId, setRemoveModeFileId] = useState<string | null>(null);
 
@@ -74,11 +80,11 @@ export default function FilesView({ navigate, success, user }: FileViewProps) {
                           stroke=""
                           className="m-1"
                         >
-                          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                           <g
                             id="SVGRepo_tracerCarrier"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           ></g>
                           <g id="SVGRepo_iconCarrier">
                             {" "}
@@ -92,6 +98,43 @@ export default function FilesView({ navigate, success, user }: FileViewProps) {
                               d="M11.5956 22.0001H12.4044C15.1871 22.0001 16.5785 22.0001 17.4831 21.1142C18.3878 20.2283 18.4803 18.7751 18.6654 15.8686L18.9321 11.6807C19.0326 10.1037 19.0828 9.31524 18.6289 8.81558C18.1751 8.31592 17.4087 8.31592 15.876 8.31592H8.12404C6.59127 8.31592 5.82488 8.31592 5.37105 8.81558C4.91722 9.31524 4.96744 10.1037 5.06788 11.6807L5.33459 15.8686C5.5197 18.7751 5.61225 20.2283 6.51689 21.1142C7.42153 22.0001 8.81289 22.0001 11.5956 22.0001ZM10.2463 12.1886C10.2051 11.7548 9.83753 11.4382 9.42537 11.4816C9.01321 11.525 8.71251 11.9119 8.75372 12.3457L9.25372 17.6089C9.29494 18.0427 9.66247 18.3593 10.0746 18.3159C10.4868 18.2725 10.7875 17.8856 10.7463 17.4518L10.2463 12.1886ZM14.5746 11.4816C14.9868 11.525 15.2875 11.9119 15.2463 12.3457L14.7463 17.6089C14.7051 18.0427 14.3375 18.3593 13.9254 18.3159C13.5132 18.2725 13.2125 17.8856 13.2537 17.4518L13.7537 12.1886C13.7949 11.7548 14.1625 11.4382 14.5746 11.4816Z"
                               fill="current"
                             ></path>{" "}
+                          </g>
+                        </svg>
+                      </div>
+                    </div>
+                    <div
+                      className="absolute hidden group-hover:flex mt-40 w-40 sm:w-40 sm:mt-40 md:w-48 md:mt-48 lg:w-52 lg:mt-52 xl:w-58 xl:mt-52 2xl:w-72 2xl:mt-72 justify-end"
+                      onClick={() => setViewMode(true)}
+                    >
+                      <div className="w-8 h-8 hover:bg-secundary fill-secundary hover:fill-white rounded m-1">
+                        <svg
+                          fill="current"
+                          height="20px"
+                          width="20px"
+                          version="1.1"
+                          id="View"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 494.907 494.907"
+                          className="mx-auto my-1.5"
+                        >
+                          <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                          <g
+                            id="SVGRepo_tracerCarrier"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          ></g>
+                          <g id="SVGRepo_iconCarrier">
+                            {" "}
+                            <g>
+                              {" "}
+                              <path d="M70.571,459.196c-6.131,0-11.114-4.983-11.114-11.106V105.993c0-6.123,4.983-11.104,11.114-11.104H308.28 c6.131,0,11.115,4.98,11.115,11.104v147.911c10.565-3.519,21.644-5.855,33.132-6.844V105.993c0-24.396-19.849-44.236-44.247-44.236 H121.157V44.236c0-6.124,4.982-11.104,11.113-11.104h237.711c6.13,0,11.113,4.98,11.113,11.104V247.36 c11.517,1.279,22.586,4.013,33.131,7.839V44.236C414.225,19.841,394.378,0,369.981,0H132.27c-24.397,0-44.245,19.841-44.245,44.236 v17.521H70.571c-24.397,0-44.246,19.841-44.246,44.236V448.09c0,24.395,19.849,44.238,44.246,44.238h190.666 c-9.543-9.811-17.714-20.943-24.203-33.132H70.571z"></path>{" "}
+                              <path d="M126.913,190.86h95.61c9.158,0,16.565-7.418,16.565-16.565c0-9.149-7.407-16.566-16.565-16.566h-95.61 c-9.153,0-16.561,7.418-16.561,16.566C110.352,183.442,117.759,190.86,126.913,190.86z"></path>{" "}
+                              <path d="M268.514,247.846c0-9.148-7.407-16.566-16.566-16.566H126.913c-9.153,0-16.561,7.418-16.561,16.566 c0,9.149,7.407,16.566,16.561,16.566h125.035C261.107,264.412,268.514,256.995,268.514,247.846z"></path>{" "}
+                              <path d="M249.055,304.808H126.913c-9.153,0-16.561,7.417-16.561,16.565c0,9.148,7.407,16.566,16.561,16.566h103.521 C235.172,326.022,241.483,314.926,249.055,304.808z"></path>{" "}
+                              <path d="M126.913,378.342c-9.153,0-16.561,7.418-16.561,16.565c0,9.148,7.407,16.566,16.561,16.566h94.737 c-0.907-6.584-1.552-13.267-1.552-20.103c0-4.4,0.274-8.728,0.664-13.029H126.913z"></path>{" "}
+                              <path d="M365.047,357.148c-28.438,0-53.614,23.563-63.545,34.223c9.931,10.655,35.107,34.209,63.545,34.209 c28.553,0,53.658-23.547,63.545-34.199C418.675,380.728,393.504,357.148,365.047,357.148z M365.047,416.22 c-13.718,0-24.846-11.128-24.846-24.849c0-13.732,11.128-24.847,24.846-24.847s24.846,11.114,24.846,24.847 C389.893,405.092,378.765,416.22,365.047,416.22z"></path>{" "}
+                              <path d="M365.047,287.837c-57.186,0-103.536,46.349-103.536,103.534c0,57.173,46.35,103.536,103.536,103.536 c57.186,0,103.535-46.363,103.535-103.536C468.582,334.185,422.233,287.837,365.047,287.837z M365.047,442.143 c-44.681,0-79.594-43.791-81.064-45.652c-2.345-3.008-2.345-7.23,0-10.23c1.471-1.868,36.384-45.678,81.064-45.678 c44.679,0,79.592,43.809,81.064,45.678c2.345,3,2.345,7.223,0,10.23C444.639,398.353,409.726,442.143,365.047,442.143z"></path>{" "}
+                            </g>{" "}
                           </g>
                         </svg>
                       </div>
@@ -137,11 +180,11 @@ export default function FilesView({ navigate, success, user }: FileViewProps) {
                               stroke="#ef4444"
                               strokeWidth="0.45600000000000007"
                             >
-                              <g key="SVGRepo_bgCarrier" stroke-width="0"></g>
+                              <g key="SVGRepo_bgCarrier" strokeWidth="0"></g>
                               <g
                                 key="SVGRepo_tracerCarrier"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               ></g>
                               <g id="SVGRepo_iconCarrier">
                                 <path

@@ -4,12 +4,16 @@ interface UploadViewProps {
   setSuccess: Function;
   setSelectedFile: Function;
   handleUpload: Function;
+  description: string;
+  setDescription: Function;
 }
 
 export default function UploadView({
   setSuccess,
   setSelectedFile,
-  handleUpload
+  handleUpload,
+  description,
+  setDescription
 }: UploadViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -22,7 +26,6 @@ export default function UploadView({
     }
     if (files && files.length > 0) {
       if (files[0].type === "application/pdf") {
-        console.log(files[0]);
         setSelectedFile(files[0]);
         handleUpload(files[0]);
       }
@@ -36,7 +39,6 @@ export default function UploadView({
     const files = event.dataTransfer.files;
     if (files && files.length > 0) {
       if (files[0].type === "application/pdf") {
-        console.log(files[0]);
         setSelectedFile(files[0]);
         handleUpload(files[0]);
       }
@@ -57,6 +59,23 @@ export default function UploadView({
 
   return (
     <div className="h-100 w-100 p-4 m-auto">
+      <div className="mb-4 mt-4">
+        <label
+          className="block text-white text-sm font-bold mb-2"
+          htmlFor="usernameOrEmail"
+        >
+          Description:
+        </label>
+
+        <input
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          type="textarea"
+          id="description"
+          value={description}
+          placeholder="(optional)"
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
