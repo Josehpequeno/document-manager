@@ -198,11 +198,11 @@ func TestUpdateDocumentHandler(t *testing.T) {
 	writer := multipart.NewWriter(&b)
 
 	// Adicionar o JSON como um campo do formulário
-	err = writer.WriteField("Title", newDocument.Title)
+	err = writer.WriteField("title", newDocument.Title)
 	assert.Nil(t, err)
-	err = writer.WriteField("OwnerId", newDocument.OwnerID)
+	err = writer.WriteField("owner_id", newDocument.OwnerID)
 	assert.Nil(t, err)
-	err = writer.WriteField("OwnerName", newDocument.OwnerName)
+	err = writer.WriteField("owner_name", newDocument.OwnerName)
 	assert.Nil(t, err)
 	// Abrir o arquivo PDF
 	file, err := os.Open(filepath)
