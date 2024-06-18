@@ -3,6 +3,7 @@ package handlers
 import (
 	"document-manager/api/models"
 	"document-manager/database"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -388,16 +389,19 @@ func DeleteUserMasterHandler(c *gin.Context) {
 	var count int64
 	var users []models.User
 	if err := db.Find(&users).Count(&count).Error; err != nil {
+		fmt.Println(errorDeletingUser, err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": err.Error()})
 		return
 	}
 
 	if count == 1 {
+		fmt.Println(errorDeletingUser, "You cannot delete the last user master")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": "You cannot delete the last user master"})
 		return
 	}
 
 	if err := db.Delete(&existingUser).Error; err != nil {
+		fmt.Println(errorDeletingUser, err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorDeletingUser, "details": err.Error()})
 		return
 	}

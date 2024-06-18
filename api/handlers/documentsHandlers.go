@@ -311,18 +311,21 @@ func UpdateDocumentHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")
 	documentID, err := uuid.Parse(documentIDStr)
 	if err != nil {
+		fmt.Println("Invalid document ID")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
 		return
 	}
 
 	err = c.Request.ParseMultipartForm(200 << 20)
 	if err != nil {
+		fmt.Println("Failed to parse form")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form"})
 		return
 	}
 
 	var docRequest DocumentRequest
 	if err := c.Bind(&docRequest); err != nil {
+		fmt.Println("Invalid form data", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
 		return
 	}
@@ -333,7 +336,7 @@ func UpdateDocumentHandler(c *gin.Context) {
 
 	// Verificar se o documento existe
 	if err := db.First(&existingDocument, "id = ?", documentID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Documento não encontrado"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
 		return
 	}
 
@@ -353,23 +356,12 @@ func UpdateDocumentHandler(c *gin.Context) {
 	// file, header, err := c.Request.FormFile("file")
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
+		fmt.Println("File is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
 		return
 	}
 	defer file.Close()
 
-	// filename := header.Filename
-
-	// directory, err := os.Getwd() //get the current directory using the built-in function
-	// if err != nil {
-	// 	fmt.Println(err) //print the error if obtained
-	// }
-	// filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + documentIDStr + ".pdf"
-
-	// if err := os.Remove(filepath); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting document file", "details": err.Error()})
-	// 	return
-	// }
 	if err := db.Save(&existingDocument).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document information"})
 		return
