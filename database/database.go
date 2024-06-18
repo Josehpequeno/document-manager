@@ -70,7 +70,7 @@ func getDSNFromEnv() string {
 
 	// Adicione verificações para garantir que os valores não estejam vazios
 	if dbHost == "" || dbPort == "" || dbUser == "" || dbPassword == "" || dbName == "" {
-		log.Fatal("Alguma variável de ambiente do banco de dados está ausente ou vazia.")
+		log.Fatal("Some database environment variable is missing or empty.", dbHost, dbPort, dbUser, dbPassword, dbName)
 	}
 
 	return "host=" + dbHost + " user=" + dbUser + " password=" + dbPassword + " dbname=" + dbName + " port=" + dbPort + " sslmode=disable TimeZone=America/Fortaleza"

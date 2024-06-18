@@ -94,8 +94,6 @@ func TestCreateDocumentHandler(t *testing.T) {
 		fmt.Println(err) //print the error if obtained
 	}
 	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + "file.pdf"
-	// _, fileErr := os.Create(filepath)
-	// assert.Nil(t, fileErr)
 
 	newDocument := models.Document{
 		Title:     "Test Document",
@@ -111,11 +109,11 @@ func TestCreateDocumentHandler(t *testing.T) {
 	writer := multipart.NewWriter(&b)
 
 	// Adicionar o JSON como um campo do formulário
-	err = writer.WriteField("Title", newDocument.Title)
+	err = writer.WriteField("title", newDocument.Title)
 	assert.Nil(t, err)
-	err = writer.WriteField("OwnerId", newDocument.OwnerID)
+	err = writer.WriteField("owner_id", newDocument.OwnerID)
 	assert.Nil(t, err)
-	err = writer.WriteField("OwnerName", newDocument.OwnerName)
+	err = writer.WriteField("owner_name", newDocument.OwnerName)
 	assert.Nil(t, err)
 	// Abrir o arquivo PDF
 	file, err := os.Open(filepath)
