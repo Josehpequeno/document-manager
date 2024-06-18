@@ -93,7 +93,9 @@ func TestCreateDocumentHandler(t *testing.T) {
 	if err != nil {
 		fmt.Println(err) //print the error if obtained
 	}
+
 	filepath := strings.Split(directory, "document-manager")[0] + "document-manager/documents/" + "file.pdf"
+	fmt.Println("###", directory, filepath)
 
 	newDocument := models.Document{
 		Title:     "Test Document",
