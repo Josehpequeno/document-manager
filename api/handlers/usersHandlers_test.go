@@ -33,11 +33,16 @@ func runInitDb() *gorm.DB {
 	//executar a migração automática
 	err = db.AutoMigrate(&models.User{})
 	if err != nil {
-		log.Fatal("Erro ao criar a tabela 'users':", err)
+		log.Fatal("Error creating table 'users':", err)
 	}
 	err = db.AutoMigrate(&models.Document{})
 	if err != nil {
-		log.Fatal("Erro ao criar a tabela 'documents':", err)
+		log.Fatal("Error creating table 'documents':", err)
+	}
+
+	err = database.InitMasterUser()
+	if err != nil {
+		log.Fatal("Error creating default user master:", err)
 	}
 
 	return db

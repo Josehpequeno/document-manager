@@ -311,21 +311,18 @@ func UpdateDocumentHandler(c *gin.Context) {
 	documentIDStr := c.Param("id")
 	documentID, err := uuid.Parse(documentIDStr)
 	if err != nil {
-		fmt.Println("Invalid document ID")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
 		return
 	}
 
 	err = c.Request.ParseMultipartForm(200 << 20)
 	if err != nil {
-		fmt.Println("Failed to parse form")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form"})
 		return
 	}
 
-	var docRequest DocumentRequest
+	var docRequest DocumentRequestFile
 	if err := c.Bind(&docRequest); err != nil {
-		fmt.Println("Invalid form data", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data", "details": err.Error()})
 		return
 	}
@@ -356,7 +353,6 @@ func UpdateDocumentHandler(c *gin.Context) {
 	// file, header, err := c.Request.FormFile("file")
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		fmt.Println("File is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File is required"})
 		return
 	}
