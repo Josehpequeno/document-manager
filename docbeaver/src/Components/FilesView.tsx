@@ -9,14 +9,14 @@ interface FileViewProps {
   navigate: NavigateFunction;
   success: boolean | null;
   user: User | null;
-  setViewMode: Function;
+  setViewPdfId: Function;
 }
 
 export default function FilesView({
   navigate,
   success,
   user,
-  setViewMode
+  setViewPdfId
 }: FileViewProps) {
   const [files, setFiles] = useState<Document[]>([]);
   const [removeModeFileId, setRemoveModeFileId] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function FilesView({
           {files.map((file) => (
             <div
               key={file.id}
-              className=" h-full w-40 sm:w-40 md:w-48 lg:w-52 xl:w-58 2xl:w-72 bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
+              className="h-full w-40 sm:w-40 md:w-48 lg:w-52 xl:w-58 2xl:w-72 bg-white mx-auto rounded-xl m-4 border shadow-lg shadow-gray-600 overflow-hidden"
             >
               {file.id !== removeModeFileId ? (
                 <>
@@ -104,7 +104,7 @@ export default function FilesView({
                     </div>
                     <div
                       className="absolute hidden group-hover:flex mt-40 w-40 sm:w-40 sm:mt-40 md:w-48 md:mt-48 lg:w-52 lg:mt-52 xl:w-58 xl:mt-52 2xl:w-72 2xl:mt-72 justify-end"
-                      onClick={() => setViewMode(true)}
+                      onClick={() => setViewPdfId(file.id)}
                     >
                       <div className="w-8 h-8 hover:bg-secundary fill-secundary hover:fill-white rounded m-1">
                         <svg

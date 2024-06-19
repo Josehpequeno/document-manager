@@ -1,25 +1,24 @@
-import { Viewer, Worker } from "@react-pdf-viewer/core";
-import { pageThumbnailPlugin } from "../utils/PDFThumbnail";
-import { thumbnailPlugin } from "@react-pdf-viewer/thumbnail";
-import "@react-pdf-viewer/core/lib/styles/index.css";
+import { Document, Thumbnail, pdfjs } from "react-pdf";
 import { useEffect, useState } from "react";
 import axios from "../utils/axios";
+import useMedia from "../utils/useMedia";
 interface ThumbnailViewProps {
   fileId: string;
   access_token: string;
 }
 
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
+
 export default function ThumbnailView({
   fileId,
   access_token
 }: ThumbnailViewProps) {
-  const thumbnailPluginInstance = thumbnailPlugin();
-  const { Cover } = thumbnailPluginInstance;
-  const pageThumbnailPluginInstance = pageThumbnailPlugin({
-    PageThumbnail: <Cover width={300} getPageIndex={() => 0} />
-  });
   const [file, setFile] = useState<string | null>(null);
   const [blobStorage, setBlobStorage] = useState<Blob | null>(null);
+  const is2xl = useMedia("(min-width: 1536px)");
 
   useEffect(() => {
     const getFile = async () => {
@@ -56,11 +55,13 @@ export default function ThumbnailView({
   }, [blobStorage]);
 
   return (
-    <Worker workerUrl="pdf.worker.min.js">
-      <Viewer
-        fileUrl={file ? file : "android-chrome-512x512.pdf"}
-        plugins={[pageThumbnailPluginInstance, thumbnailPluginInstance]}
-      />
-    </Worker>
+    <Document file={file ? file : "android-chrome-512x512.pdf"}>
+      <Thumbnail
+        pageNumber={1}
+        scale={is2xl ? 1 : 0.75}
+        height={600}
+        width={300}
+      ></Thumbnail>
+    </Document>
   );
 }

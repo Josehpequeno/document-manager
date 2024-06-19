@@ -7,6 +7,7 @@ import axios from "../../utils/axios";
 
 import UploadView from "../../Components/UploadView";
 import FilesView from "../../Components/FilesView";
+import PdfView from "../../Components/PdfView";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
-  const [viewMode, setViewMode] = useState(false);
+  const [viewPdfId, setViewPdfId] = useState<string | null>(null);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -153,8 +154,8 @@ export default function Home() {
         </nav>
       </div>
       <div className="h-full bg-slate-950 text-white flex-1 min-h-screen">
-        {viewMode ? (
-          <div></div>
+        {viewPdfId ? (
+          <PdfView viewPdfId={viewPdfId!} access_token={user!.access_token} />
         ) : (
           <>
             {error && (
@@ -253,14 +254,14 @@ export default function Home() {
                 handleUpload={handleUpload}
                 description={description}
                 setDescription={setDescription}
-              ></UploadView>
+              />
             ) : (
               <FilesView
                 user={user}
                 success={success}
                 navigate={navigate}
-                setViewMode={setViewMode}
-              ></FilesView>
+                setViewPdfId={setViewPdfId}
+              />
             )}
           </>
         )}
