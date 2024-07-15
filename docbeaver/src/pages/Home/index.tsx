@@ -73,7 +73,7 @@ export default function Home() {
   }, [uploadMode]);
 
   return (
-    <div className="h-full flex">
+    <div className="h-100 flex">
       <div className="min-h-screen relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 h-100 w-full max-w-[2.5rem] md:max-w-[12rem] p-1 md:p-4 shadow-xl shadow-blue-gray-900/5">
         <div className="mb-4 p-1 md:p-4 flex gap-2 items-center">
           <Link to="/home">
@@ -153,9 +153,13 @@ export default function Home() {
           </div>
         </nav>
       </div>
-      <div className="h-full bg-slate-950 text-white flex-1 min-h-screen">
+      <div className="h-100 bg-slate-950 text-white flex-1">
         {viewPdfId ? (
-          <PdfView viewPdfId={viewPdfId!} access_token={user!.access_token} />
+          <PdfView
+            viewPdfId={viewPdfId!}
+            access_token={user!.access_token}
+            setViewPdfId={setViewPdfId}
+          />
         ) : (
           <>
             {error && (

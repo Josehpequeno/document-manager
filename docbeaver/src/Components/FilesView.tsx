@@ -63,7 +63,7 @@ export default function FilesView({
             >
               {file.id !== removeModeFileId ? (
                 <>
-                  <div className="h-3/4 bg-gray-100 justify-center flex group">
+                  <div className="bg-transparent justify-center flex group">
                     <ThumbnailView
                       access_token={user!.access_token}
                       fileId={file.id}
@@ -140,7 +140,7 @@ export default function FilesView({
                       </div>
                     </div>
                   </div>
-                  <div className="h-1/4 mt-2 px-4 pb-4 w-full">
+                  <div className="mt-2 px-4 pb-4 w-full">
                     <div className="flex justify-between">
                       <div className="w-40 sm:w-40 md:w-48 lg:w-52 xl:w-58 2xl:w-72 text-ellipsis overflow-hidden truncate">
                         <h1 className="text-sm md:text-sm 2xl:text-xl font-semibold text-gray-800 mt-2">

@@ -58,9 +58,8 @@ export default function ThumbnailView({
     <Document file={file ? file : "android-chrome-512x512.pdf"}>
       <Thumbnail
         pageNumber={1}
-        scale={is2xl ? 1 : 0.75}
-        height={600}
-        width={300}
+        scale={is2xl ? 1.05 : 0.7}
+        height={400}
       ></Thumbnail>
     </Document>
   );
