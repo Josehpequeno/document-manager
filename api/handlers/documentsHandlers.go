@@ -14,7 +14,9 @@ import (
 )
 
 type DocumentsResponse struct {
-	Documents []DocumentResponse `json:"documents"`
+	Documents      []DocumentResponse `json:"documents"`
+	TotalDocuments int64              `json:"total_documents"`
+	TotalPages     int64              `json:"total_pages"`
 }
 
 type DocumentResponse struct {
@@ -52,9 +54,9 @@ type MessageWithDocumentResponse struct {
 // @Tags Documents
 // @Accept json
 // @Produce json
-// @Param start query integer false "Start index for pagination" default(0)
+// @Param page query integer false "Page number for pagination" default(1)
 // @Param limit query integer false "Maximum number of documents to retrieve per page" default(10)
-// @Param sort query string false "Field to sort by (id, title, owner)" default(id)
+// @Param sort query string false "Field to sort by (id, title, owner, created_at)" default(id)
 // @Param sortDirection query string false "Sort direction (asc or desc)" default(asc)
 //
 //	@Success 200 {object} DocumentsResponse
@@ -65,14 +67,14 @@ type MessageWithDocumentResponse struct {
 // @Security Bearer
 // @Router /documents [get]
 func GetAllDocumentsHandler(c *gin.Context) {
-	start := c.DefaultQuery("start", "0")
+	page := c.DefaultQuery("page", "1")
 	limit := c.DefaultQuery("limit", "10")
 	sort := c.DefaultQuery("sort", "id")
 	sortDir := c.DefaultQuery("dir", "asc")
 
-	startInt, err := strconv.Atoi(start)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid 'start' parameter"})
+	pageInt, err := strconv.Atoi(page)
+	if err != nil || pageInt < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid 'page' parameter"})
 		return
 	}
 
@@ -84,7 +86,8 @@ func GetAllDocumentsHandler(c *gin.Context) {
 
 	var sortField string
 	switch sort {
-	case "id", "title", "owner":
+	case "id", "title", "owner", "created_at":
+		println(sort)
 		sortField = sort
 	default:
 		sortField = "id"
@@ -102,14 +105,24 @@ func GetAllDocumentsHandler(c *gin.Context) {
 
 	var documents []models.Document
 
-	query := db.Offset(startInt).Limit(limitInt).Order(sortField + " " + sortOrder).Find(&documents)
+	// Count total documents
+	var totalDocuments int64
+	db.Model(&models.Document{}).Count(&totalDocuments)
+
+	// Calculate offset based on page and limit
+	offset := (pageInt - 1) * limitInt
+
+	// Retrieve documents with pagination
+	query := db.Offset(offset).Limit(limitInt).Order(sortField + " " + sortOrder).Find(&documents)
 	if err = query.Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving documents", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"documents": documents})
+	// Calculate total pages
+	totalPages := (totalDocuments + int64(limitInt) - 1) / int64(limitInt)
 
+	c.JSON(http.StatusOK, gin.H{"documents": documents, "total_documents": totalDocuments, "total_pages": totalPages})
 }
 
 // GetDocumentByIDHandler gets a document by ID.

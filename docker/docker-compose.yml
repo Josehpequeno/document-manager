@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   postgres:
     image: postgres
@@ -11,7 +11,7 @@ services:
       - ./dados_postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-          
+
   pgadmin4:
     image: dpage/pgadmin4
     environment:
@@ -23,9 +23,9 @@ services:
       - "443"
     depends_on:
       - postgres
-  documentmanager:
-    image: josehpequeno/document-manager
-    ports:
-      - "3450:3450"
-    depends_on:
-      - postgres
+  # documentmanager:
+  #   image: josehpequeno/document-manager
+  #   ports:
+  #     - "3450:3450"
+  #   depends_on:
+  #     - postgres

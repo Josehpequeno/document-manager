@@ -21,6 +21,10 @@ definitions:
         items:
           $ref: '#/definitions/handlers.DocumentResponse'
         type: array
+      total_documents:
+        type: integer
+      total_pages:
+        type: integer
     type: object
   handlers.ErrorResponse:
     properties:
@@ -142,10 +146,10 @@ paths:
       description: Get all documents
       operationId: get-all-documents
       parameters:
-      - default: 0
-        description: Start index for pagination
+      - default: 1
+        description: Page number for pagination
         in: query
-        name: start
+        name: page
         type: integer
       - default: 10
         description: Maximum number of documents to retrieve per page
@@ -153,7 +157,7 @@ paths:
         name: limit
         type: integer
       - default: id
-        description: Field to sort by (id, title, owner)
+        description: Field to sort by (id, title, owner, created_at)
         in: query
         name: sort
         type: string
@@ -184,37 +188,6 @@ paths:
       security:
       - Bearer: []
       summary: Get all documents
-      tags:
-      - Documents
-    post:
-      consumes:
-      - multipart/form-data
-      description: Create a new document
-      operationId: create-document
-      parameters:
-      - description: Document file
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/handlers.DocumentResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Create a new document
       tags:
       - Documents
   /documents/{id}:
@@ -353,6 +326,38 @@ paths:
       security:
       - Bearer: []
       summary: Get a document file by ID
+      tags:
+      - Documents
+  /documents/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new document
+      operationId: create-document
+      parameters:
+      - description: Document file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.DocumentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new document
       tags:
       - Documents
   /documents/upload/{id}:

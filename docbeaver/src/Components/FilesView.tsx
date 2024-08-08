@@ -16,16 +16,18 @@ export default function FilesView({
   navigate,
   success,
   user,
-  setViewPdfId
+  setViewPdfId,
 }: FileViewProps) {
   const [files, setFiles] = useState<Document[]>([]);
   const [removeModeFileId, setRemoveModeFileId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   const handleRemove = async () => {
     await axios.delete(`/documents/${removeModeFileId}`, {
       headers: {
-        Authorization: user!.access_token
-      }
+        Authorization: user!.access_token,
+      },
     });
     setFiles(files.filter((file) => file.id !== removeModeFileId));
   };
@@ -33,18 +35,34 @@ export default function FilesView({
   useEffect(() => {
     const getFiles = async () => {
       try {
-        const response = await axios.get("/documents", {
-          headers: {
-            Authorization: user!.access_token
-          }
-        });
+        const response = await axios.get(
+          `/documents?sort=created_at&dir=desc&page=${currentPage}`,
+          {
+            headers: {
+              Authorization: user!.access_token,
+            },
+          },
+        );
+        setTotalPages(response.data.total_pages);
         setFiles(response.data.documents);
       } catch (error) {
         console.error(error);
       }
     };
     getFiles();
-  }, [navigate, success, user]);
+  }, [navigate, success, user, currentPage]);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
 
   return (
     <div className="h-100 w-full p-0 md:p-4">
@@ -244,6 +262,85 @@ export default function FilesView({
           {/* item */}
         </div>
       )}
+      <div className="flex justify-between mt-4 bg-white rounded-xl mx-10 my-5 md:my-2">
+        <button
+          className="px-4 py-2 text-slate-800 rounded disabled:opacity-50"
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-4 h-4"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            <g
+              id="SVGRepo_tracerCarrier"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            ></g>
+            <g id="SVGRepo_iconCarrier">
+              {" "}
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M15.785 6.36699L10.095 10.667C9.72311 10.9319 9.50229 11.3604 9.50229 11.817C9.50229 12.2736 9.72311 12.702 10.095 12.967L15.785 17.667C16.2658 18.0513 16.9185 18.1412 17.4853 17.9012C18.052 17.6611 18.4416 17.1297 18.5 16.517V7.51699C18.4416 6.90427 18.052 6.37286 17.4853 6.1328C16.9185 5.89274 16.2658 5.98265 15.785 6.36699Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></path>{" "}
+              <path
+                d="M6.5 6.01697L6.5 18.017"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              ></path>{" "}
+            </g>
+          </svg>
+        </button>
+        <span className="text-slate-800 p-2">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          className="px-4 py-2 text-slate-800 rounded disabled:opacity-50"
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-4 h-4"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            <g
+              id="SVGRepo_tracerCarrier"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            ></g>
+            <g id="SVGRepo_iconCarrier">
+              {" "}
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M8.715 6.36694L14.405 10.6669C14.7769 10.9319 14.9977 11.3603 14.9977 11.8169C14.9977 12.2736 14.7769 12.702 14.405 12.9669L8.715 17.6669C8.23425 18.0513 7.58151 18.1412 7.01475 17.9011C6.44799 17.6611 6.05842 17.1297 6 16.5169V7.51694C6.05842 6.90422 6.44799 6.37281 7.01475 6.13275C7.58151 5.89269 8.23425 5.9826 8.715 6.36694Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></path>{" "}
+              <path
+                d="M18 6.01697V18.017"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              ></path>{" "}
+            </g>
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

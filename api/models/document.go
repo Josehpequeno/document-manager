@@ -13,7 +13,7 @@ type Document struct {
 	FilePath    string     `json:"filepath"`
 	OwnerID     string     `json:"owner_id" gorm:"not null"`
 	OwnerName   string     `json:"owner_name" gorm:"not null"`
-	CreatedAt   time.Time  `json:"createdAt"`
-	UpdatedAt   time.Time  `json:"updatedAt"`
-	DeletedAt   *time.Time `json:"deletedAt"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at"`
 }

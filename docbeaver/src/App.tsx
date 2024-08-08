@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { Provider } from "react-redux";
 import store from "./store/store";
+import Setttings from "./pages/Settings";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/settings" element={<Setttings />} />
         </Routes>
       </Router>
     </Provider>
