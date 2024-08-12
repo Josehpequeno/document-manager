@@ -1,76 +1,80 @@
 # document-manager
 
-Go API para gerenciar documentos com frontend em React.
+Go API for managing documents with a React frontend.
 
-## Clone o Repositório
+## Clone the Repository
 
 ```shell
 git clone https://github.com/Josehpequeno/document-manager.git
 cd document-manager
 ```
 
-## Executar última versão com docker-compose
+## Run the latest version with docker-compose
 
 ```shell
 cd docker && docker-compose up -d
 ```
 
-Se os containers estiverem parados, execute o seguinte comando:
+If the containers are stopped, run the following command:
 
 ```shell
 docker-compose start
 ```
 
-O Postgres estará rodando na porta 5432, o pgAdmin na porta 8080 e a aplicação na porta 3450 de acordo com as credenciais no arquivo docker-compose.yml.
+Postgres will run on port 5432, pgAdmin on port 8080, and the application on port 3450, according to the credentials in the docker-compose.yml file.
 
-## Iniciar variáveis de ambiente
+## Initialize environment variables
+
+```shell
+cd backend
+```
 
 ```shell
 chmod +x .initENV.sh && source .initENV.sh
 ```
 
-## Gerar Documentação Swagger
+## Generate Swagger Documentation
 
-### Instalar Swag
+### Install Swag
 
 ```shell
 go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
-### Executar Swag
+### Run Swag
 
 ```shell
 swag init --parseDependency --parseInternal
 ```
 
-### Rota Swagger
+### Swagger Route
 
 A documentação Swagger pode ser acessada em [http://localhost:3450/swagger/index.html](http://localhost:3450/swagger/index.html).
 
-## Testes
+## Tests
 
-Testar handlers:
+Test handlers:
 
 ```shell
 cd api/handlers/ && GIN_MODE=release go test
 ```
 
-## Requisitos do Sistema
+## System Requirements
 
-Certifique-se de ter o Docker e o Docker Compose instalados.
+Make sure you have Docker and Docker Compose installed.
 
-## Link para o Repositório no DockerHub
+## Link to repository on DockerHub
 
-A imagem Docker do projeto está disponível no [repositório do DockerHub](https://hub.docker.com/r/josehpequeno/document-manager).
+The project's Docker image is available in the [DockerHub repository](https://hub.docker.com/r/josehpequeno/document-manager).
 
-* Executar com Docker
-  Para executar a aplicação com Docker, use o seguinte comando:
+* Run with Docker
+  To run the application with Docker, use the following command:
 
   ```shell
-  docker run -it --name test-document-manager -p 8080:3450 -p 3000:3000 josehpequeno/document-manager:latest
+  docker run -it --name test-document-manager -p 3450:3450 -p 3000:3000 josehpequeno/document-manager:latest
   ```
-  Isso irá iniciar a aplicação no contêiner Docker e expor as portas 8080 e 3000 para os respectivos serviços.
+  This will start the application in the Docker container and expose ports 8080 and 3000 to the respective services.
 
-## Licença
+## License
 
-Este projeto é licenciado sob a [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).

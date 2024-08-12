@@ -5,6 +5,7 @@ import (
 	"document-manager/api/models"
 	"document-manager/database"
 	_ "document-manager/docs"
+	"fmt"
 	"log"
 )
 
@@ -54,6 +55,8 @@ func main() {
 	}
 
 	router := api.SetupRouter()
+
+	fmt.Println("Server running on http://localhost:3450")
 
 	router.Run(":3450")
 }

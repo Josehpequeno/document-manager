@@ -3,14 +3,16 @@
 # Iniciar o PostgreSQL
 service postgresql start
 
-# Navegar para o diretório da aplicação React
-cd /app/docbeaver
+# Iniciar a aplicação Go
+source .initENV.sh
 
-# Iniciar a aplicação React
-npm start &
+/app/main &
 
 # Esperar um pouco antes de continuar
 sleep 5
 
-# Iniciar a aplicação Go
-/app/main
+# Navegar para o diretório da aplicação React
+cd /app/docbeaver
+
+# Iniciar a aplicação React
+serve -n -s build

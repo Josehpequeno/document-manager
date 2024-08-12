@@ -1,4 +1,6 @@
 {
+  "proxy": "http://localhost:3450",
+  "homepage": ".",
   "name": "docbeaver",
   "version": "0.1.0",
   "private": true,
@@ -33,7 +35,6 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:3450",
   "eslintConfig": {
     "extends": [
       "react-app",
