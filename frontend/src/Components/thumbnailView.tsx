@@ -9,12 +9,12 @@ interface ThumbnailViewProps {
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
+  import.meta.url,
 ).toString();
 
 export default function ThumbnailView({
   fileId,
-  access_token
+  access_token,
 }: ThumbnailViewProps) {
   const [file, setFile] = useState<string | null>(null);
   const [blobStorage, setBlobStorage] = useState<Blob | null>(null);
@@ -28,10 +28,10 @@ export default function ThumbnailView({
             `/documents/file/${fileId}`,
             {
               headers: {
-                Authorization: access_token
+                Authorization: access_token,
               },
-              responseType: "arraybuffer"
-            }
+              responseType: "arraybuffer",
+            },
           );
           const blob = new Blob([response.data], { type: "application/pdf" });
           const url = URL.createObjectURL(blob);

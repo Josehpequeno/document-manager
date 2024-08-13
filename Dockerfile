@@ -1,5 +1,5 @@
 # Etapa de build do frontend
-FROM node:14 AS build-frontend
+FROM node:20 AS build-frontend
 
 WORKDIR /app/frontend
 
@@ -33,23 +33,28 @@ FROM ubuntu:latest
 # Atualize os pacotes e instale o PostgreSQL, nginx, npm e nodejs
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update -q \
-    && apt-get install -y -q postgresql postgresql-contrib nodejs npm nginx
+    && apt-get install -y -q postgresql postgresql-contrib nginx bash curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configurar o diretório de trabalho
-WORKDIR /root/
+# Instalar a versão 20 do nodejs
+RUN curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
+
+RUN bash nodesource_setup.sh && apt-get install -y nodejs
+
+# Instalar o serve para servir a aplicação React
+RUN npm install -g serve
 
 # Exponha o diretório de dados do PostgreSQL para persistência
 VOLUME /var/lib/postgresql/data
 
-# # Copie o binário do primeiro estágio
-# COPY --from=builder /app/main /app/main
+# Configurar o diretório de trabalho
+WORKDIR /root/
 
 # Inicie o PostgreSQL e crie o banco de dados
-#su postgres -c 'createuser -s postgres' && \
 RUN service postgresql start && \
     su postgres -c 'createdb documentmanager' && \
     su - postgres -c "psql -U postgres -c \"ALTER USER postgres WITH PASSWORD 'postgres';\""
-
 
 # Combinando front, back e database
 
@@ -69,9 +74,6 @@ RUN chmod +x /root/.initENV.sh
 # Configurar PostgreSQL
 RUN mkdir -p /var/lib/postgresql/data
 RUN chown -R postgres:postgres /var/lib/postgresql
-
-# Instalar o serve para servir a aplicação React
-RUN npm install -g serve
 
 # Expor as portas necessárias
 EXPOSE 80 3450 5432 3000

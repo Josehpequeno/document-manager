@@ -71,7 +71,7 @@ The project's Docker image is available in the [DockerHub repository](https://hu
   To run the application with Docker, use the following command:
 
   ```shell
-  docker run -it --name test-document-manager -p 3450:3450 -p 3000:3000 josehpequeno/document-manager:latest
+  docker run -it --name test-document-manager -p 3450:3450 -p 3000:3000 -p 80:80 josehpequeno/document-manager:latest
   ```
   This will start the application in the Docker container and expose ports 8080 and 3000 to the respective services.
 

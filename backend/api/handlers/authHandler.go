@@ -125,6 +125,7 @@ func LoginHandler(c *gin.Context) {
 
 func AuthMiddleware(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
+	println(">>", tokenString)
 
 	if tokenString == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Missing token"})

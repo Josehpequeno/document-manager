@@ -13,7 +13,7 @@ export default function UploadView({
   setSelectedFile,
   handleUpload,
   description,
-  setDescription
+  setDescription,
 }: UploadViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -62,7 +62,7 @@ export default function UploadView({
       <div className="mb-4 mt-4">
         <label
           className="block text-white text-sm font-bold mb-2"
-          htmlFor="usernameOrEmail"
+          htmlFor="description"
         >
           Description:
         </label>
@@ -85,6 +85,7 @@ export default function UploadView({
           className={`flex justify-center h-svh w-100 px-4 transition bg-slate-950 border-2  border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none ${
             dragging ? "border-sky-300" : "border-gray-200"
           }`}
+          htmlFor="file"
         >
           <span className="flex items-center space-x-2">
             <svg
@@ -107,6 +108,7 @@ export default function UploadView({
             </span>
           </span>
           <input
+            id="file"
             type="file"
             name="file_upload"
             className="hidden"

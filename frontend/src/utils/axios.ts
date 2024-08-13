@@ -1,10 +1,10 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "/",
+  baseURL: "http://localhost:3450/",
   proxy: {
     host: "localhost",
-    port: 3450
+    port: 3450,
   },
 });
 

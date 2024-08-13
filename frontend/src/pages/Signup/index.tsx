@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import logo from "../../logo.png";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import axios from "../../utils/axios";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -15,7 +15,7 @@ export default function Signup() {
   const [passwordIsEmpty, setPasswordIsEmpty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestSuccess, setRequestSuccess] = useState<Boolean | undefined>(
-    undefined
+    undefined,
   );
 
   const handleShowPassword = () => {
@@ -45,7 +45,7 @@ export default function Signup() {
         await axios.post(`/users`, {
           email,
           name,
-          password
+          password,
         });
         setRequestSuccess(true);
         setError(null);

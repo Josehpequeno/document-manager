@@ -36,14 +36,13 @@ export default function FilesView({
     const getFiles = async () => {
       try {
         const response = await axios.get(
-          `/documents?sort=created_at&dir=desc&page=${currentPage}`,
+          `/documents/?sort=created_at&dir=desc&page=${currentPage}`,
           {
             headers: {
               Authorization: user!.access_token,
             },
           },
         );
-        console.log(response.data);
         setTotalPages(response.data.total_pages);
         setFiles(response.data.documents);
       } catch (error) {

@@ -11,6 +11,7 @@ func CORSConfig() cors.Config {
 	config.AllowMethods = []string{"POST", "GET", "PUT", "OPTIONS", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
 	config.ExposeHeaders = []string{"Content-Length"}
+	config.AllowCredentials = true
 
 	return config
 }
