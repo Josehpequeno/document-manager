@@ -32,9 +32,10 @@ jobs:
           go-version: "1.20"
 
       - name: Build
-        run: go build -v backend/...
+        run: cd backend && go build -v ./...
 
       - name: Test
         run: |
-          source backend/.initENV.sh
-          go test -v backend/...
+          cd backend &&
+          source .initENV.sh
+          go test -v ./...
