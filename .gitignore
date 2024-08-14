@@ -1,2 +1,3 @@
 /docker/dados_postgres
-/backend/documents/*
+documents/*
+!documents/file.pdf

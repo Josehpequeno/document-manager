@@ -7,7 +7,7 @@ import (
 func CORSConfig() cors.Config {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
-	// config.AllowOrigins = []string{"http://localhost:3000"}
+	// config.AllowOrigins = []string{"http://localhost", "http://localhost:3000"}
 	config.AllowMethods = []string{"POST", "GET", "PUT", "OPTIONS", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
 	config.ExposeHeaders = []string{"Content-Length"}

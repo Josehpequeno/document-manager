@@ -16,11 +16,11 @@ func SetupRouter() *gin.Engine {
 	//cors
 	r.Use(cors.New(utils.CORSConfig()))
 
-	r.GET("/", handlers.HelloHandler)
+	r.GET("/api/", handlers.HelloHandler)
 
-	r.POST("/refresh-token", handlers.RefreshTokenHandler)
+	r.POST("/api/refresh-token", handlers.RefreshTokenHandler)
 
-	usersProtected := r.Group("/users")
+	usersProtected := r.Group("/api/users")
 	usersProtected.Use(handlers.AuthMiddleware)
 	{
 		usersProtected.GET("/", handlers.GetAllUsersHandler)
@@ -28,19 +28,19 @@ func SetupRouter() *gin.Engine {
 		usersProtected.PUT("/:id", handlers.UpdateUserHandler)
 		usersProtected.DELETE("/:id", handlers.DeleteUserHandler)
 	}
-	r.POST("/users", handlers.CreateUserHandler)
+	r.POST("/api/users", handlers.CreateUserHandler)
 
 	//master
-	usersMasterProtect := r.Group("/usersMaster")
+	usersMasterProtect := r.Group("/api/usersMaster")
 	usersMasterProtect.Use(handlers.AuthMiddlewareMaster)
 	{
 		r.POST("/", handlers.CreateUserMasterHandler)
 		r.DELETE("/:id", handlers.DeleteUserMasterHandler)
 	}
-	r.POST("/login", handlers.LoginHandler)
+	r.POST("/api/login", handlers.LoginHandler)
 
 	// documents
-	documentsProtected := r.Group("/documents")
+	documentsProtected := r.Group("/api/documents")
 	documentsProtected.Use(handlers.AuthMiddleware)
 	{
 		documentsProtected.GET("/", handlers.GetAllDocumentsHandler)
@@ -53,7 +53,7 @@ func SetupRouter() *gin.Engine {
 	}
 
 	//swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	r.GET("/api/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	return r
 }

@@ -1147,7 +1147,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:3450",
-	BasePath:         "/",
+	BasePath:         "/api/",
 	Schemes:          []string{},
 	Title:            "Document manager API",
 	Description:      "This is a sample api of documents manager",

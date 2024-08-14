@@ -21,7 +21,7 @@ import (
 // @license.url https://opensource.org/licenses/MIT
 
 // @host localhost:3450
-// @BasePath /
+// @BasePath /api/
 // @query.collection.format multi
 // @securityDefinitions.apikey Bearer
 // @in header
@@ -57,6 +57,7 @@ func main() {
 	router := api.SetupRouter()
 
 	fmt.Println("Server running on http://localhost:3450")
+	fmt.Println("Swagger on http://localhost:3450/api/swagger/index.html")
 
 	router.Run(":3450")
 }

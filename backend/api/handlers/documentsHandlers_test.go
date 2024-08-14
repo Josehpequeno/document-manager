@@ -94,7 +94,7 @@ func TestCreateDocumentHandler(t *testing.T) {
 		fmt.Println(err) //print the error if obtained
 	}
 
-	filepath := strings.Split(directory, "api/handlers")[0] + "documents/" + "file.pdf"
+	filepath := strings.Split(directory, "backend/api/handlers")[0] + "documents/" + "file.pdf"
 
 	newDocument := models.Document{
 		Title:     "Test Document",
