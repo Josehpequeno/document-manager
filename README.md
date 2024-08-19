@@ -1,6 +1,33 @@
 # document-manager
 
+![Project Logo](frontend/public/android-chrome-512x512.png)
+
 Go API for managing documents with a React frontend.
+
+## Screens
+### Landing Page
+<img align="center" src="/screens/landingPage.png">
+
+### Login Page
+<img align="center" src="/screens/login.png">
+
+### Signup Page
+<img align="center" src="/screens/signup.png">
+
+### Home Page
+<img align="center" src="/screens/home.png">
+
+
+<img align="center" src="/screens/homeDelete.png">
+
+### Upload Page
+<img align="center" src="/screens/upload.png">
+
+### Settings Page
+<img align="center" src="/screens/settings.png">
+
+### PDFviewer Page
+<img align="center" src="/screens/pdfviewer.png">
 
 ## Clone the Repository
 
