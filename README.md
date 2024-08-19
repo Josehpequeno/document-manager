@@ -1,6 +1,6 @@
 # document-manager
 
-![Project Logo](frontend/public/android-chrome-512x512.png)
+![Project Logo](frontend/public/android-chrome-192x192.png)
 
 Go API for managing documents with a React frontend.
 
