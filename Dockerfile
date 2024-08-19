@@ -3,6 +3,9 @@ FROM node:20 AS build-frontend
 
 WORKDIR /app/frontend
 
+ARG REACT_APP_LOCAL_IP
+ENV REACT_APP_LOCAL_IP=${REACT_APP_LOCAL_IP}
+
 COPY frontend/package.json ./
 COPY frontend/package-lock.json ./
 
@@ -67,9 +70,14 @@ COPY --from=build-frontend /app/frontend/build /usr/share/nginx/html
 # Configurar Nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copiar o script de variáveis de ambiente
+# Copiar o script de variáveis de ambiente do backend
 COPY backend/.initENV.sh /root/.initENV.sh
 RUN chmod +x /root/.initENV.sh
+
+# Copie o script de inicialização para o container
+COPY start.sh /usr/local/bin/start.sh
+# Dê permissão de execução ao script
+RUN chmod +x /usr/local/bin/start.sh
 
 # Configurar PostgreSQL
 RUN mkdir -p /var/lib/postgresql/data
@@ -78,5 +86,5 @@ RUN chown -R postgres:postgres /var/lib/postgresql
 # Expor as portas necessárias
 EXPOSE 80 3450 5432 3000
 
-# Comando para iniciar todos os serviços
-CMD ["sh", "-c", ". /root/.initENV.sh && service postgresql start && ./main & serve -n -s /usr/share/nginx/html -l 3000 & nginx -g 'daemon off;'"]
+# Defina o comando para iniciar o script de inicialização
+CMD ["sh", "/usr/local/bin/start.sh"]

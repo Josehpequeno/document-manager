@@ -29,35 +29,39 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
 
-	//Inicializar a conexão com o banco de dados
+	// Initialize the database connection
 	db, err := database.InitDB()
 	if err != nil {
-		log.Fatal("Erro ao configurar a conexão com o banco de dados: ", err)
+		log.Fatalf("Error configuring database connection: %v", err)
 	}
-	//será executado no final do bloco
+	// Ensure the connection is closed when main exits
 	// defer db.Close()
 
-	//executar a migração automática
+	// Run automatic migration for the 'users' table
 	err = db.AutoMigrate(&models.User{})
 	if err != nil {
-		log.Fatal("Erro ao criar a tabela 'users': ", err)
+		log.Fatalf("Error creating 'users' table: %v", err)
 	}
 
-	//Inicializar a conexão com o banco de dados
+	// Initialize the master user
 	err = database.InitMasterUser()
 	if err != nil {
-		log.Fatal("Erro ao criar primeiro usuário master: ", err)
+		log.Fatalf("Error creating initial master user: %v", err)
 	}
 
+	// Run automatic migration for the 'documents' table
 	err = db.AutoMigrate(&models.Document{})
 	if err != nil {
-		log.Fatal("Erro ao criar a tabela 'Documents': ", err)
+		log.Fatalf("Error creating 'documents' table: %v", err)
 	}
 
+	// Set up and start the router
 	router := api.SetupRouter()
 
 	fmt.Println("Server running on http://localhost:3450")
-	fmt.Println("Swagger on http://localhost:3450/api/swagger/index.html")
+	fmt.Println("Swagger UI available at http://localhost:3450/api/swagger/index.html")
 
-	router.Run(":3450")
+	if err := router.Run("0.0.0.0:3450"); err != nil {
+		log.Fatalf("Error starting the server: %v", err)
+	}
 }

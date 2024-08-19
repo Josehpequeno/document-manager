@@ -10,7 +10,8 @@ export default function LandingPage() {
         <p className="mt-3 w-3/4 text-xl">
           Welcome to DocBeaver, your reliable document management solution.
           Whether you need to store, organize, or share your documents,
-          DocBeaver has got you covered.{" "}
+          DocBeaver has got you covered. Sever running on{" "}
+          {process.env.REACT_APP_LOCAL_IP || window.REACT_APP_LOCAL_IP}.{"\n"}
           <Link to="/signup" className="App-link">
             Sign up
           </Link>{" "}
